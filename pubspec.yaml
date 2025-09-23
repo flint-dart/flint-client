@@ -1,0 +1,22 @@
+name: flint_client
+description: "Official Dart client for the Flint framework, developed and maintained by Eulogia."
+version: 1.0.0
+repository: https://github.com/flint-dart/flint-client
+homepage: https://flintdart.eulogia.net
+issue_tracker: https://github.com/flint-dart/flint-client/issues
+
+# Prevent accidental publishing to pub.dev (remove if you plan to publish later)
+publish_to: 'none'
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  path: ^1.9.0
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.24.0
+
+# Project metadata
+
