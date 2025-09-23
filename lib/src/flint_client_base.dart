@@ -62,6 +62,8 @@ class FlintClient {
   /// [requestInterceptor] and [responseInterceptor] allow custom handling
   /// before sending requests or after receiving responses.
   /// [debug] enables console logging.
+  bool _isDisposed = false;
+
   FlintClient({
     this.baseUrl,
     this.headers = const {},
@@ -254,9 +256,24 @@ class FlintClient {
     );
     return newUri.toString();
   }
+
+  void dispose() {
+    if (!_isDisposed) {
+      _client.close(force: true);
+      _isDisposed = true;
+    }
+  }
+
   // -------------------------
   // Internal request handling
   // -------------------------
+  void _ensureNotDisposed() {
+    if (_isDisposed) {
+      throw FlintError(
+        'FlintClient has been disposed and can no longer be used.',
+      );
+    }
+  }
 
   /// Sends the HTTP request using the specified [method] and [path].
   ///
@@ -271,13 +288,13 @@ class FlintClient {
     ProgressCallback? onSendProgress,
     JsonParser<T>? parser,
   }) async {
-    final url = Uri.parse('$baseUrl$path');
-    final client = _client;
+    _ensureNotDisposed(); // ✅ prevent usage after dispose
 
+    final url = Uri.parse('$baseUrl$path');
     _log('$method $url');
 
     try {
-      HttpClientRequest request = await _createRequest(client, method, url);
+      final request = await _createRequest(_client, method, url);
 
       // Merge headers
       final allHeaders = {...this.headers, ...headers ?? {}};
@@ -303,7 +320,6 @@ class FlintClient {
       }
 
       _log('Response: ${response.statusCode} ${response.reasonPhrase}');
-
       return await _handleResponse<T>(response, saveFilePath, parser);
     } on SocketException catch (e) {
       return _handleError<T>(FlintError('Network error: ${e.message}'));
@@ -313,8 +329,6 @@ class FlintClient {
       return _handleError<T>(FlintError('HTTP error: ${e.message}'));
     } catch (e) {
       return _handleError<T>(FlintError('Unexpected error: ${e.toString()}'));
-    } finally {
-      client.close();
     }
   }
 

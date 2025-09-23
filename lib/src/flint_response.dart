@@ -38,6 +38,7 @@ class FlintResponse<T> {
 
   /// Optional HTTP headers returned with the response.
   final HttpHeaders? headers;
+  final bool success;
 
   /// Creates a successful response.
   ///
@@ -45,11 +46,13 @@ class FlintResponse<T> {
   /// [data] is the response payload.
   /// [type] indicates the type of the response.
   /// [headers] optionally contains HTTP headers.
+  /// success
   FlintResponse({
     required this.statusCode,
     this.data,
     this.type = FlintResponseType.unknown,
     this.headers,
+    this.success = true,
   }) : isError = false;
 
   /// Creates an error response.
@@ -61,6 +64,7 @@ class FlintResponse<T> {
       data = null, // optionally: data = error
       isError = true,
       headers = null,
+      success = false,
       type = FlintResponseType.unknown;
 
   /// Returns true if the response type is JSON.
