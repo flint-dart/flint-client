@@ -1,5 +1,5 @@
-import 'package:flint_client/flint_client.dart';
 import 'package:flint_client/src/ai/provider/ai_provider.dart';
+import 'package:flint_client/src/flint_client_base.dart';
 import 'package:flint_client/src/flint_response.dart';
 
 class OpenAIProvider extends AIProvider {

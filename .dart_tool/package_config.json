@@ -38,6 +38,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "clock",
+      "rootUri": "file:///C:/Users/EULOGIA/AppData/Local/Pub/Cache/hosted/pub.dev/clock-1.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "collection",
       "rootUri": "file:///C:/Users/EULOGIA/AppData/Local/Pub/Cache/hosted/pub.dev/collection-1.19.1",
       "packageUri": "lib/",

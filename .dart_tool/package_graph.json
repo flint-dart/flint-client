@@ -7,6 +7,7 @@
       "name": "flint_client",
       "version": "1.0.0",
       "dependencies": [
+        "clock",
         "path"
       ],
       "devDependencies": [
@@ -49,6 +50,11 @@
     {
       "name": "lints",
       "version": "5.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "clock",
+      "version": "1.1.2",
       "dependencies": []
     },
     {
