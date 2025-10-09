@@ -2,8 +2,7 @@
 cat > .pubignore << EOL
 # Exclude from published package
 .dart_tool/
-doc/
-test/
+
 .git/
 .gitignore
 .packages
