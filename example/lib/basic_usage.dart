@@ -5,7 +5,6 @@ import 'package:flint_client/flint_client.dart';
 /// This example demonstrates the fundamental usage of FlintClient
 /// for common HTTP operations like GET, POST, PUT, and DELETE.
 
-
 // Example data model
 class User {
   final int id;

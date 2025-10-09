@@ -9,9 +9,38 @@ class StatusCodeConfig {
   /// Default configuration following standard HTTP
   const StatusCodeConfig({
     this.successCodes = const {200, 201, 202, 204},
-    this.errorCodes = const {400, 401, 402, 403, 404, 405, 408, 409, 410, 422, 429, 500, 501, 502, 503, 504},
+    this.errorCodes = const {
+      400,
+      401,
+      402,
+      403,
+      404,
+      405,
+      408,
+      409,
+      410,
+      422,
+      429,
+      500,
+      501,
+      502,
+      503,
+      504,
+    },
     this.redirectCodes = const {301, 302, 303, 304, 307, 308},
-    this.clientErrorCodes = const {400, 401, 402, 403, 404, 405, 408, 409, 410, 422, 429},
+    this.clientErrorCodes = const {
+      400,
+      401,
+      402,
+      403,
+      404,
+      405,
+      408,
+      409,
+      410,
+      422,
+      429,
+    },
     this.serverErrorCodes = const {500, 501, 502, 503, 504},
   });
 
@@ -28,10 +57,10 @@ class StatusCodeConfig {
   factory StatusCodeConfig.forApi({
     /// Some APIs use 200 for everything, even errors
     bool uses200ForErrors = false,
-    
+
     /// Some APIs use custom success codes
     Set<int>? customSuccessCodes,
-    
+
     /// Some APIs have special redirect behaviors
     Set<int>? customRedirectCodes,
   }) {
@@ -44,7 +73,7 @@ class StatusCodeConfig {
         serverErrorCodes: {200},
       );
     }
-    
+
     return StatusCodeConfig.custom(
       successCodes: customSuccessCodes ?? {200, 201, 204},
       errorCodes: const {400, 401, 403, 404, 422, 429, 500},

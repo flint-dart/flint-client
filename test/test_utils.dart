@@ -177,11 +177,17 @@ Matcher isSuccessfulResponse<T>({
     isA<FlintResponse<T>>(),
     predicate<FlintResponse<T>>((response) => response.isSuccess),
     predicate<FlintResponse<T>>((response) => !response.isError),
-    if (statusCode != null) predicate<FlintResponse<T>>((response) => response.statusCode == statusCode),
-    if (data != null) predicate<FlintResponse<T>>((response) => response.data == data),
-    if (type != null) predicate<FlintResponse<T>>((response) => response.type == type),
+    if (statusCode != null)
+      predicate<FlintResponse<T>>(
+        (response) => response.statusCode == statusCode,
+      ),
+    if (data != null)
+      predicate<FlintResponse<T>>((response) => response.data == data),
+    if (type != null)
+      predicate<FlintResponse<T>>((response) => response.type == type),
   ]);
 }
+
 /// Matcher for error FlintResponse
 Matcher isErrorResponse<T>({int? statusCode, String? errorMessage}) {
   return allOf([

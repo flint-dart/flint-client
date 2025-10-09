@@ -4,14 +4,14 @@ class CacheConfig {
   final bool persist;
   final int maxSize;
   final bool forceRefresh;
-  
+
   const CacheConfig({
     this.maxAge = const Duration(hours: 1),
     this.persist = false,
     this.maxSize = 100,
     this.forceRefresh = false,
   });
-  
+
   CacheConfig copyWith({
     Duration? maxAge,
     bool? persist,
