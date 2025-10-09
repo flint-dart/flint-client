@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="flint_client API docs, for the Dart programming language.">
+  <title>flint_client - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://flintdart.eulogia.net">flint_client package</a></li>
+  </ol>
+  <div class="self-name">flint_client</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="flint_client">flint_client</h1>
+<p><a href="https://pub.dev/packages/flint_client"><img src="https://img.shields.io/pub/v/flint_client" alt="Pub Version"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+<a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-2.17+-blue.svg" alt="Dart"></a></p>
+<p>Official Dart client for the <a href="https://flintdart.eulogia.net">Flint</a> framework.<br>
+Developed and maintained by <strong>Eulogia</strong>.</p>
+<p>A powerful, feature-rich HTTP client for Dart and Flutter with built-in caching, retry mechanisms, interceptors, and customizable status code handling.</p>
+<hr>
+<h2 id="-features">🚀 Features</h2>
+<ul>
+<li><strong>🔄 Smart Retry Logic</strong>: Configurable retry with exponential backoff and jitter</li>
+<li><strong>💾 Built-in Caching</strong>: Memory cache with configurable TTL and freshness ratios</li>
+<li><strong>🎯 Customizable Status Codes</strong>: Define your own success/error/redirect status mappings</li>
+<li><strong>📁 File Upload/Download</strong>: Multipart form support with progress tracking</li>
+<li><strong>🔧 Interceptors</strong>: Request/response interceptors for authentication and logging</li>
+<li><strong>⏱️ Progress Tracking</strong>: Real-time upload/download progress callbacks</li>
+<li><strong>🛡️ Type Safety</strong>: Generic response types with custom JSON parsers</li>
+<li><strong>🐛 Debug Logging</strong>: Comprehensive debug output for development</li>
+<li><strong>📦 Zero Dependencies</strong>: Pure Dart implementation</li>
+</ul>
+<hr>
+<h2 id="-installation">📦 Installation</h2>
+<p>Add this to your <code>pubspec.yaml</code>:</p>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  flint_client:
+    git:
+      url: https://github.com/flint-dart/flint-client.git
+</code></pre>
+<p>Then run:</p>
+<pre class="language-bash"><code class="language-bash">dart pub get
+</code></pre>
+<hr>
+<h2 id="-quick-start">🔧 Quick Start</h2>
+<h3 id="basic-usage">Basic Usage</h3>
+<pre class="language-dart"><code class="language-dart">import 'package:flint_client/flint_client.dart';
+
+void main() async {
+  final client = FlintClient(
+    baseUrl: "https://api.example.com",
+    debug: true, // Enable debug logging
+  );
+
+  final response = await client.get&lt;User&gt;("/users/1",
+    parser: (json) =&gt; User.fromJson(json),
+  );
+
+  if (response.isSuccess) {
+    print("User: ${response.data}");
+  } else {
+    print("Error: ${response.error}");
+  }
+
+  client.dispose();
+}
+</code></pre>
+<h3 id="advanced-configuration">Advanced Configuration</h3>
+<pre class="language-dart"><code class="language-dart">final client = FlintClient(
+  baseUrl: "https://api.example.com",
+  headers: {
+    'Authorization': 'Bearer your-token',
+    'Content-Type': 'application/json',
+  },
+  timeout: Duration(seconds: 30),
+  debug: true,
+  statusCodeConfig: StatusCodeConfig.custom(
+    successCodes: {200, 201, 204},
+    errorCodes: {400, 401, 403, 404, 422, 500},
+    redirectCodes: {301, 302},
+  ),
+  onError: (error) {
+    print('Request failed: ${error.message}');
+  },
+);
+</code></pre>
+<hr>
+<h2 id="-usage-examples">📚 Usage Examples</h2>
+<h3 id="get-request-with-caching">GET Request with Caching</h3>
+<pre class="language-dart"><code class="language-dart">final response = await client.get&lt;List&lt;Product&gt;&gt;(
+  '/products',
+  cacheConfig: CacheConfig(
+    maxAge: Duration(minutes: 10),
+    forceRefresh: false,
+  ),
+  parser: (json) {
+    if (json is List) {
+      return json.map((item) =&gt; Product.fromJson(item)).toList();
+    }
+    return [];
+  },
+);
+</code></pre>
+<h3 id="post-request-with-json-body">POST Request with JSON Body</h3>
+<pre class="language-dart"><code class="language-dart">final response = await client.post&lt;Product&gt;(
+  '/products',
+  body: {
+    'title': 'New Product',
+    'price': 29.99,
+    'category': 'electronics',
+  },
+  parser: (json) =&gt; Product.fromJson(json),
+);
+</code></pre>
+<h3 id="file-upload-with-progress">File Upload with Progress</h3>
+<pre class="language-dart"><code class="language-dart">final response = await client.post&lt;Map&lt;String, dynamic&gt;&gt;(
+  '/upload',
+  files: {
+    'image': File('path/to/image.jpg'),
+  },
+  onSendProgress: (sent, total) {
+    final progress = (sent / total * 100).round();
+    print('Upload progress: $progress%');
+  },
+);
+</code></pre>
+<h3 id="custom-status-code-handling">Custom Status Code Handling</h3>
+<pre class="language-dart"><code class="language-dart">// For APIs that use non-standard status codes
+final customConfig = StatusCodeConfig.custom(
+  successCodes: {200, 201, 204, 304}, // Include 304 as success
+  errorCodes: {400, 401, 500}, // Only specific errors
+  redirectCodes: {302, 307},
+);
+
+final response = await client.get&lt;User&gt;(
+  '/user',
+  statusConfig: customConfig,
+);
+
+if (response.isSuccess) {
+  // Handle success according to your custom config
+}
+</code></pre>
+<h3 id="error-handling-with-ondone-callback">Error Handling with onDone Callback</h3>
+<pre class="language-dart"><code class="language-dart">final response = await client.get&lt;User&gt;(
+  '/users/1',
+  onDone: (response, error) {
+    if (error != null) {
+      print('Request completed with error: ${error.message}');
+    } else {
+      print('Request completed successfully: ${response.statusCode}');
+    }
+  },
+);
+</code></pre>
+<hr>
+<h2 id="-api-reference">🔌 API Reference</h2>
+<h3 id="http-methods">HTTP Methods</h3>
+<ul>
+<li><code>get&lt;T&gt;(path, {query, headers, cache, parser})</code></li>
+<li><code>post&lt;T&gt;(path, {body, files, headers, parser})</code></li>
+<li><code>put&lt;T&gt;(path, {body, files, headers, parser})</code></li>
+<li><code>patch&lt;T&gt;(path, {body, files, headers, parser})</code></li>
+<li><code>delete&lt;T&gt;(path, {headers, parser})</code></li>
+</ul>
+<h3 id="configuration-options">Configuration Options</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baseUrl</code></td>
+<td><code>String</code></td>
+<td>Base URL for all requests</td>
+</tr>
+<tr>
+<td><code>headers</code></td>
+<td><code>Map&lt;String, String&gt;</code></td>
+<td>Default headers</td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td><code>Duration</code></td>
+<td>Request timeout duration</td>
+</tr>
+<tr>
+<td><code>debug</code></td>
+<td><code>bool</code></td>
+<td>Enable debug logging</td>
+</tr>
+<tr>
+<td><code>statusCodeConfig</code></td>
+<td><code>StatusCodeConfig</code></td>
+<td>Custom status code mappings</td>
+</tr>
+<tr>
+<td><code>onError</code></td>
+<td><code>ErrorHandler</code></td>
+<td>Global error callback</td>
+</tr>
+<tr>
+<td><code>onDone</code></td>
+<td><code>RequestDoneCallback</code></td>
+<td>Request completion callback</td>
+</tr>
+</tbody>
+</table>
+<h3 id="response-properties">Response Properties</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>statusCode</code></td>
+<td><code>int</code></td>
+<td>HTTP status code</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td><code>T</code></td>
+<td>Response data (parsed)</td>
+</tr>
+<tr>
+<td><code>isSuccess</code></td>
+<td><code>bool</code></td>
+<td>Whether request succeeded</td>
+</tr>
+<tr>
+<td><code>isError</code></td>
+<td><code>bool</code></td>
+<td>Whether request failed</td>
+</tr>
+<tr>
+<td><code>isRedirect</code></td>
+<td><code>bool</code></td>
+<td>Whether response is redirect</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td><code>FlintError</code></td>
+<td>Error object (if any)</td>
+</tr>
+<tr>
+<td><code>headers</code></td>
+<td><code>HttpHeaders</code></td>
+<td>Response headers</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td><code>Duration</code></td>
+<td>Request duration</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="-advanced-features">🛠️ Advanced Features</h2>
+<h3 id="custom-interceptors">Custom Interceptors</h3>
+<pre class="language-dart"><code class="language-dart">final client = FlintClient(
+  baseUrl: 'https://api.example.com',
+  requestInterceptor: (request) async {
+    // Add auth token to all requests
+    request.headers.set('Authorization', 'Bearer $token');
+  },
+  responseInterceptor: (response) async {
+    // Log all responses
+    print('Response: ${response.statusCode}');
+  },
+);
+</code></pre>
+<h3 id="retry-configuration">Retry Configuration</h3>
+<pre class="language-dart"><code class="language-dart">final response = await client.get&lt;User&gt;(
+  '/users/1',
+  retryConfig: RetryConfig(
+    maxAttempts: 3,
+    delay: Duration(seconds: 1),
+    maxDelay: Duration(seconds: 10),
+    retryStatusCodes: {500, 502, 503},
+  ),
+);
+</code></pre>
+<h3 id="cache-management">Cache Management</h3>
+<pre class="language-dart"><code class="language-dart">// Clear entire cache
+await client.clearCache();
+
+// Remove specific cached item
+await client.removeCachedResponse('cache-key');
+
+// Get cache size
+final size = await client.cacheSize;
+</code></pre>
+<hr>
+<h2 id="-status-code-configuration">🎯 Status Code Configuration</h2>
+<p>Handle non-standard APIs with custom status code mappings:</p>
+<pre class="language-dart"><code class="language-dart">// For APIs that use 200 for errors
+final weirdApiConfig = StatusCodeConfig.custom(
+  successCodes: {200}, // Only 200 is success
+  errorCodes: {200, 400, 500}, // 200 can be error!
+  redirectCodes: {302},
+);
+
+// Standard HTTP (default)
+final standardConfig = StatusCodeConfig();
+
+// Pre-defined configurations
+final only200 = StatusCodeConfig.only200;
+final broadSuccess = StatusCodeConfig.broadSuccess;
+</code></pre>
+<hr>
+<h2 id="-documentation">📖 Documentation</h2>
+<ul>
+<li><a href="https://flintdart.eulogia.net/docs/client">Full API Documentation</a></li>
+<li><a href="https://github.com/flint-dart/flint-client">GitHub Repository</a></li>
+<li><a href="https://github.com/flint-dart/flint-client/issues">Issue Tracker</a></li>
+<li><a href="/examples">Examples Folder</a> - Complete usage examples</li>
+</ul>
+<hr>
+<h2 id="-contributing">🤝 Contributing</h2>
+<p>We love contributions! Here's how to help:</p>
+<ol>
+<li><strong>Fork</strong> the repository</li>
+<li><strong>Create</strong> a feature branch: <code>git checkout -b feature/amazing-feature</code></li>
+<li><strong>Commit</strong> your changes: <code>git commit -m 'Add amazing feature'</code></li>
+<li><strong>Push</strong> to the branch: <code>git push origin feature/amazing-feature</code></li>
+<li><strong>Open</strong> a Pull Request</li>
+</ol>
+<h3 id="development-setup">Development Setup</h3>
+<pre class="language-bash"><code class="language-bash">git clone https://github.com/flint-dart/flint-client.git
+cd flint-client
+dart pub get
+dart test
+</code></pre>
+<hr>
+<h2 id="-license">📄 License</h2>
+<p>This project is licensed under the <strong>MIT License</strong> - see the <a href="LICENSE">LICENSE</a> file for details.</p>
+<hr>
+<h2 id="-built-with">🏗️ Built With</h2>
+<ul>
+<li><a href="https://dart.dev">Dart</a> - Programming language</li>
+<li><a href="https://flutter.dev">Flutter</a> - UI framework (for Flutter apps)</li>
+</ul>
+<hr>
+<h2 id="-maintainers">👥 Maintainers</h2>
+<ul>
+<li><a href="https://github.com/eulogia">Eulogia</a> - Core maintainer</li>
+<li><a href="https://github.com/eulogia">Eulogia Website</a> - Core maintainer</li>
+</ul>
+<hr>
+<h2 id="-acknowledgments">🙏 Acknowledgments</h2>
+<ul>
+<li>Thanks to all our contributors and users</li>
+</ul>
+<hr>
+<p><strong>⭐ Star this repo if you find it helpful!</strong></p>
+<pre class="language-dart"><code>
+
+</code></pre>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="flint_client">
+  <span class="name"><a href="flint_client/">flint_client</a></span> 
+
+</dt>
+<dd>Support for doing something awesome.
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://flintdart.eulogia.net">flint_client package</a></li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">flint_client</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="flint_client/">flint_client</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    flint_client
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

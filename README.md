@@ -333,12 +333,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 👥 Maintainers
 
 - [Eulogia](https://github.com/eulogia) - Core maintainer
+- [Eulogia Website](https://eulogia.net) - 
 
 ---
 
 ## 🙏 Acknowledgments
 
-- Inspired by popular HTTP clients like Dio and http
 - Thanks to all our contributors and users
 
 ---
