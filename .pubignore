@@ -1,1 +1,10 @@
-.dart_tool
+# Only include what should NOT be published
+.dart_tool/
+test/
+example/
+.git/
+.gitignore
+.packages
+.pub-cache/
+.pub/
+build/

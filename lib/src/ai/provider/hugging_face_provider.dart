@@ -1,5 +1,4 @@
 import 'package:flint_client/flint_client.dart';
-import 'package:flint_client/src/ai/provider/ai_provider.dart';
 
 class HuggingFaceProvider extends AIProvider {
   HuggingFaceProvider({required String apiKey})
