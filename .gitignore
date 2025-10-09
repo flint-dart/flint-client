@@ -33,7 +33,17 @@ examples/
 benchmark/
 tool/
 
-
+ .dart_tool/package_config.json
+  .dart_tool/package_graph.json
+  .dart_tool/pub/bin/test/test.dart-3.8.1.snapshot
+  .dart_tool/test/incremental_kernel.Ly9AZGFydD0zLjg=
+  .gitignore
+  doc/api/__404error.html
+  doc/api/categories.json
+  doc/api/flint_client/CacheConfig-class-sidebar.html
+  doc/api/flint_client/CacheConfig-class.html
+  doc/api/flint_client/CacheConfig/CacheConfig.html
+  ...
 
 # Git
 .git/
