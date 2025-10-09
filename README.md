@@ -1,6 +1,3 @@
-Here's a comprehensive README.md for your Flint Client package:
-
-```markdown
 # flint_client
 
 [![Pub Version](https://img.shields.io/pub/v/flint_client)](https://pub.dev/packages/flint_client)
