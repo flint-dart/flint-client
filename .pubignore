@@ -1,5 +1,8 @@
-# Only include what should NOT be published
+# Create .pubignore
+cat > .pubignore << EOL
+# Exclude from published package
 .dart_tool/
+doc/
 test/
 example/
 .git/
@@ -8,3 +11,9 @@ example/
 .pub-cache/
 .pub/
 build/
+*.sublime-*
+*.iml
+*.ipr
+*.iws
+.DS_Store
+EOL
