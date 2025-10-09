@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "flint_client",
-      "version": "1.0.0",
+      "version": "0.0.1",
       "dependencies": [
         "clock",
         "path"

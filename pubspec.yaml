@@ -5,10 +5,6 @@ repository: https://github.com/flint-dart/flint-client
 homepage: https://flintdart.eulogia.net
 issue_tracker: https://github.com/flint-dart/flint-client/issues
 example: https://github.com/flint-dart/flint-client-sample
-
-# Prevent accidental publishing to pub.dev (remove if you plan to publish later)
-publish_to: 'none'
-
 environment:
   sdk: ^3.8.1
 
