@@ -4,7 +4,6 @@ cat > .pubignore << EOL
 .dart_tool/
 doc/
 test/
-example/
 .git/
 .gitignore
 .packages
