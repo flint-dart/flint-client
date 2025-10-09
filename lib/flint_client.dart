@@ -9,5 +9,9 @@ export 'src/retry.dart';
 export 'src/flint_error.dart';
 export 'src/flint_response.dart';
 export 'src/extention.dart';
+export 'src/ai/model/ai_model.dart';
+export 'src/ai/provider/ai_provider.dart';
+export 'src/ai/provider/hugging_face_provider.dart';
+export 'src/ai/provider/open_ai_provider.dart';
 
 // TODO: Export any libraries intended for clients of this package.
