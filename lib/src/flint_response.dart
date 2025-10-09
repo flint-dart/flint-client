@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flint_client/src/flint_error.dart';
+import 'package:flint_client/src/status_code_config.dart';
 
 /// Enum representing the type of response returned by the Flint client.
 enum FlintResponseType {
@@ -42,7 +43,7 @@ class FlintResponse<T> {
   /// Optional HTTP headers returned with the response.
   final HttpHeaders? headers;
 
-  /// Whether the request was successful (status code 200-299).
+  /// Whether the request was successful based on status config.
   final bool success;
 
   /// The error object if this response represents an error.
@@ -60,6 +61,9 @@ class FlintResponse<T> {
   /// The duration of the request.
   final Duration? duration;
 
+  /// Status code configuration for this response
+  final StatusCodeConfig statusConfig;
+
   /// Creates a successful response.
   ///
   /// [statusCode] is required.
@@ -75,9 +79,15 @@ class FlintResponse<T> {
     this.method,
     DateTime? timestamp,
     this.duration,
-  }) : success = statusCode >= 200 && statusCode < 300,
-       isError = statusCode >= 400,
-       error = statusCode >= 400
+    StatusCodeConfig? statusConfig,
+  }) : statusConfig = statusConfig ?? const StatusCodeConfig(),
+       success = (statusConfig ?? const StatusCodeConfig()).isSuccess(
+         statusCode,
+       ),
+       isError = !(statusConfig ?? const StatusCodeConfig()).isSuccess(
+         statusCode,
+       ),
+       error = !(statusConfig ?? const StatusCodeConfig()).isSuccess(statusCode)
            ? FlintError(
                'HTTP $statusCode',
                statusCode: statusCode,
@@ -96,17 +106,19 @@ class FlintResponse<T> {
     HttpHeaders? headers,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) : statusCode = error.statusCode ?? 500,
        data = null,
        isError = true,
        success = false,
-       headers = headers,
-       url = error.url,
-       method = method,
        error = error,
+       headers = headers,
+       method = method,
+       duration = duration,
+       url = error.url,
        type = FlintResponseType.unknown,
        timestamp = error.timestamp,
-       duration = duration;
+       statusConfig = statusConfig ?? const StatusCodeConfig();
 
   /// Creates a response from an HTTP response.
   factory FlintResponse.fromHttpResponse(
@@ -116,9 +128,11 @@ class FlintResponse<T> {
     Uri? url,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) {
-    final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
-    final isError = response.statusCode >= 400;
+    final config = statusConfig ?? const StatusCodeConfig();
+    final isSuccess = config.isSuccess(response.statusCode);
+    final isError = !isSuccess;
 
     FlintError? error;
     if (isError) {
@@ -136,6 +150,7 @@ class FlintResponse<T> {
       isError: isError,
       success: isSuccess,
       error: error,
+      statusConfig: config,
     );
   }
 
@@ -152,6 +167,7 @@ class FlintResponse<T> {
     required this.success,
     this.error,
     DateTime? timestamp,
+    required this.statusConfig,
   }) : timestamp = timestamp ?? DateTime.now();
 
   /// Returns true if the response type is JSON.
@@ -168,18 +184,44 @@ class FlintResponse<T> {
 
   /// Returns true if the response type is binary.
   bool get isBinary => type == FlintResponseType.binary;
+  bool get isSuccess => statusConfig.isSuccess(statusCode);
+  
 
-  /// Returns true if the status code indicates a client error (4xx).
-  bool get isClientError => statusCode >= 400 && statusCode < 500;
+  /// Status helpers that use the config (NOT hardcoded values)
+  bool get isClientError => statusConfig.isClientError(statusCode);
+  bool get isServerError => statusConfig.isServerError(statusCode);
+  bool get isRedirect => statusConfig.isRedirect(statusCode);
 
-  /// Returns true if the status code indicates a server error (5xx).
-  bool get isServerError => statusCode >= 500 && statusCode < 600;
+  /// For debugging - shows which config is being used
+  @override
+  String toString() {
+    final buffer = StringBuffer('FlintResponse(');
+    buffer.write('statusCode: $statusCode, ');
+    buffer.write('success: $success, ');
+    buffer.write('type: $type, ');
+    buffer.write('usingConfig: ${statusConfig.runtimeType}, ');
 
-  /// Returns true if the status code indicates a redirect (3xx).
-  bool get isRedirect => statusCode >= 300 && statusCode < 400;
+    if (url != null) {
+      buffer.write('url: $url, ');
+    }
 
-  /// Returns true if the status code indicates success (2xx).
-  bool get isSuccess => statusCode >= 200 && statusCode < 300;
+    if (method != null) {
+      buffer.write('method: $method, ');
+    }
+
+    if (duration != null) {
+      buffer.write('duration: ${duration!.inMilliseconds}ms, ');
+    }
+
+    if (isError && error != null) {
+      buffer.write('error: $error');
+    } else {
+      buffer.write('data: ${data != null ? data.toString() : 'null'}');
+    }
+
+    buffer.write(')');
+    return buffer.toString();
+  }
 
   /// Returns the response data cast to a different type [R].
   ///
@@ -212,6 +254,7 @@ class FlintResponse<T> {
         headers: headers,
         method: method,
         duration: duration,
+        statusConfig: statusConfig,
       );
     }
 
@@ -224,6 +267,7 @@ class FlintResponse<T> {
       method: method,
       timestamp: timestamp,
       duration: duration,
+      statusConfig: statusConfig,
     );
   }
 
@@ -240,6 +284,7 @@ class FlintResponse<T> {
     String? method,
     Duration? duration,
     DateTime? timestamp,
+    StatusCodeConfig? statusConfig,
   }) {
     if (isError == true || error != null) {
       final effectiveError = error ?? this.error ?? FlintError('Unknown error');
@@ -251,6 +296,7 @@ class FlintResponse<T> {
         headers: headers ?? this.headers,
         method: method ?? this.method,
         duration: duration ?? this.duration,
+        statusConfig: statusConfig ?? this.statusConfig,
       );
     }
 
@@ -263,6 +309,7 @@ class FlintResponse<T> {
       method: method ?? this.method,
       timestamp: timestamp ?? this.timestamp,
       duration: duration ?? this.duration,
+      statusConfig: statusConfig ?? this.statusConfig,
     );
   }
 
@@ -278,6 +325,12 @@ class FlintResponse<T> {
       'timestamp': timestamp.toIso8601String(),
       'duration': duration?.inMilliseconds,
       'error': error?.toMap(),
+      'statusConfig': {
+        'successCodes': statusConfig.successCodes.toList(),
+        'clientErrorCodes': statusConfig.clientErrorCodes.toList(),
+        'serverErrorCodes': statusConfig.serverErrorCodes.toList(),
+        'redirectCodes': statusConfig.redirectCodes.toList(),
+      },
     };
   }
 
@@ -303,35 +356,6 @@ class FlintResponse<T> {
   }
 
   @override
-  String toString() {
-    final buffer = StringBuffer('FlintResponse(');
-    buffer.write('statusCode: $statusCode, ');
-    buffer.write('success: $success, ');
-    buffer.write('type: $type, ');
-
-    if (url != null) {
-      buffer.write('url: $url, ');
-    }
-
-    if (method != null) {
-      buffer.write('method: $method, ');
-    }
-
-    if (duration != null) {
-      buffer.write('duration: ${duration!.inMilliseconds}ms, ');
-    }
-
-    if (isError && error != null) {
-      buffer.write('error: $error');
-    } else {
-      buffer.write('data: ${data != null ? data.toString() : 'null'}');
-    }
-
-    buffer.write(')');
-    return buffer.toString();
-  }
-
-  @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
@@ -342,11 +366,21 @@ class FlintResponse<T> {
         other.success == success &&
         other.isError == isError &&
         other.url == url &&
-        other.method == method;
+        other.method == method &&
+        other.statusConfig.successCodes == statusConfig.successCodes;
   }
 
   @override
   int get hashCode {
-    return Object.hash(statusCode, data, type, success, isError, url, method);
+    return Object.hash(
+      statusCode,
+      data,
+      type,
+      success,
+      isError,
+      url,
+      method,
+      statusConfig.successCodes,
+    );
   }
 }

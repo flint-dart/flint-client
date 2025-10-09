@@ -43,7 +43,12 @@ class MemoryCacheStore implements CacheStore {
 
   @override
   Future<void> cleanup(DateTime before) async {
-    _cache.removeWhere((key, value) => value.cachedAt.isBefore(before));
+    // Remove entries that expired BEFORE the given timestamp
+    // This means entries whose expiration time is before the 'before' parameter
+    _cache.removeWhere((key, value) {
+      final expirationTime = value.cachedAt.add(value.maxAge);
+      return expirationTime.isBefore(before);
+    });
   }
 
   @override

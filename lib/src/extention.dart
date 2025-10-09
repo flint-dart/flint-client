@@ -1,7 +1,5 @@
 import 'dart:io';
 import '../flint_client.dart';
-import 'flint_response.dart';
-import 'flint_error.dart';
 
 extension FlintClientFileSaver on FlintClient {
   /// Saves a [FlintResponse] containing a file or bytes to [path].

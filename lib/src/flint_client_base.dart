@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:clock/clock.dart';
+import 'package:flint_client/src/status_code_config.dart';
 
 // Import your existing files
 import 'cache/cache.dart';
@@ -27,6 +28,8 @@ typedef ResponseInterceptor =
 
 /// Parses JSON responses into a strongly-typed object [T].
 typedef JsonParser<T> = T Function(dynamic json);
+typedef RequestDoneCallback<T> =
+    void Function(FlintResponse<T> response, FlintError? error);
 
 /// A powerful HTTP client for making requests to REST APIs with
 /// support for JSON, file uploads/downloads, progress tracking, caching, and retries.
@@ -64,6 +67,8 @@ class FlintClient {
   /// Internal, long-lived [HttpClient] instance.
   final HttpClient _client;
 
+  final StatusCodeConfig statusCodeConfig;
+
   /// Creates a new [FlintClient] instance.
   ///
   /// [baseUrl] sets the API base URL. If null, requests must provide full URLs.
@@ -77,18 +82,22 @@ class FlintClient {
   /// [defaultRetryConfig] sets default retry behavior.
   /// [debug] enables console logging.
   bool _isDisposed = false;
+  final RequestDoneCallback? onDone;
 
   FlintClient({
     this.baseUrl,
     this.headers = const {},
     this.timeout = const Duration(seconds: 30),
     this.onError,
+    this.onDone, // Add this
     this.requestInterceptor,
     this.responseInterceptor,
     CacheStore? cacheStore,
     CacheConfig? defaultCacheConfig,
     RetryConfig? defaultRetryConfig,
     this.debug = false,
+    this.statusCodeConfig =
+        const StatusCodeConfig(), // Optional - defaults to standard
   }) : cacheStore = cacheStore ?? MemoryCacheStore(),
        defaultCacheConfig = defaultCacheConfig ?? const CacheConfig(),
        defaultRetryConfig = defaultRetryConfig ?? const RetryConfig(),
@@ -106,20 +115,24 @@ class FlintClient {
     ResponseInterceptor? responseInterceptor,
     CacheStore? cacheStore,
     CacheConfig? defaultCacheConfig,
+    RequestDoneCallback? onDone, // Add this
     RetryConfig? defaultRetryConfig,
     bool? debug,
+    StatusCodeConfig? statusCodeConfig,
   }) {
     return FlintClient(
       baseUrl: baseUrl ?? this.baseUrl,
       headers: headers ?? this.headers,
       timeout: timeout ?? this.timeout,
       onError: onError ?? this.onError,
+      onDone: onDone ?? this.onDone, // Add this
       requestInterceptor: requestInterceptor ?? this.requestInterceptor,
       responseInterceptor: responseInterceptor ?? this.responseInterceptor,
       cacheStore: cacheStore ?? this.cacheStore,
       defaultCacheConfig: defaultCacheConfig ?? this.defaultCacheConfig,
       defaultRetryConfig: defaultRetryConfig ?? this.defaultRetryConfig,
       debug: debug ?? this.debug,
+      statusCodeConfig: statusCodeConfig ?? this.statusCodeConfig,
     );
   }
 
@@ -145,10 +158,14 @@ class FlintClient {
     Map<String, String>? headers,
     String? saveFilePath,
     CacheConfig? cacheConfig,
+    StatusCodeConfig? statusConfig, // ADD THIS
+
     RetryConfig? retryConfig,
     JsonParser<T>? parser,
     ErrorHandler? onError,
+    RequestDoneCallback? onDone,
   }) {
+    final mainOnDone = onDone ?? this.onDone;
     _ensureBaseUrl();
 
     if (queryParameters != null && queryParameters.isNotEmpty) {
@@ -161,9 +178,11 @@ class FlintClient {
       headers: headers,
       saveFilePath: saveFilePath,
       cacheConfig: cacheConfig,
+      statusConfig: statusConfig,
       retryConfig: retryConfig,
       parser: parser,
       onError: onError,
+      onDone: mainOnDone,
     );
   }
 
@@ -177,11 +196,16 @@ class FlintClient {
     String? saveFilePath,
     Map<String, File>? files,
     ProgressCallback? onSendProgress,
+    StatusCodeConfig? statusConfig, // ADD THIS
+
     CacheConfig? cacheConfig,
     RetryConfig? retryConfig,
     JsonParser<T>? parser,
     ErrorHandler? onError,
+    RequestDoneCallback? onDone,
   }) {
+    final mainOnDone = onDone ?? this.onDone;
+
     _ensureBaseUrl();
 
     if (queryParameters != null && queryParameters.isNotEmpty) {
@@ -195,11 +219,13 @@ class FlintClient {
       headers: headers,
       saveFilePath: saveFilePath,
       files: files,
+      statusConfig: statusConfig,
       onSendProgress: onSendProgress,
       cacheConfig: cacheConfig,
       retryConfig: retryConfig,
       parser: parser,
       onError: onError,
+      onDone: mainOnDone,
     );
   }
 
@@ -212,11 +238,16 @@ class FlintClient {
     String? saveFilePath,
     Map<String, File>? files,
     ProgressCallback? onSendProgress,
+    StatusCodeConfig? statusConfig, // ADD THIS
+
     CacheConfig? cacheConfig,
     RetryConfig? retryConfig,
     JsonParser<T>? parser,
     ErrorHandler? onError,
+    RequestDoneCallback? onDone,
   }) {
+    final mainOnDone = onDone ?? this.onDone;
+
     _ensureBaseUrl();
 
     if (queryParameters != null && queryParameters.isNotEmpty) {
@@ -231,10 +262,12 @@ class FlintClient {
       saveFilePath: saveFilePath,
       files: files,
       onSendProgress: onSendProgress,
+      statusConfig: statusConfig,
       cacheConfig: cacheConfig,
       retryConfig: retryConfig,
       parser: parser,
       onError: onError,
+      onDone: mainOnDone,
     );
   }
 
@@ -250,8 +283,13 @@ class FlintClient {
     CacheConfig? cacheConfig,
     RetryConfig? retryConfig,
     JsonParser<T>? parser,
+    StatusCodeConfig? statusConfig, // ADD THIS
+
     ErrorHandler? onError,
+    RequestDoneCallback? onDone,
   }) {
+    final mainOnDone = onDone ?? this.onDone;
+
     _ensureBaseUrl();
 
     if (queryParameters != null && queryParameters.isNotEmpty) {
@@ -268,8 +306,10 @@ class FlintClient {
       onSendProgress: onSendProgress,
       cacheConfig: cacheConfig,
       retryConfig: retryConfig,
+      statusConfig: statusConfig,
       parser: parser,
       onError: onError,
+      onDone: mainOnDone,
     );
   }
 
@@ -281,10 +321,15 @@ class FlintClient {
     Map<String, String>? headers,
     String? saveFilePath,
     CacheConfig? cacheConfig,
+    StatusCodeConfig? statusConfig, // ADD THIS
+
     RetryConfig? retryConfig,
     JsonParser<T>? parser,
     ErrorHandler? onError,
+    RequestDoneCallback? onDone,
   }) {
+    final mainOnDone = onDone ?? this.onDone;
+
     _ensureBaseUrl();
 
     if (queryParameters != null && queryParameters.isNotEmpty) {
@@ -298,8 +343,10 @@ class FlintClient {
       saveFilePath: saveFilePath,
       cacheConfig: cacheConfig,
       retryConfig: retryConfig,
+      statusConfig: statusConfig,
       parser: parser,
       onError: onError,
+      onDone: mainOnDone,
     );
   }
 
@@ -446,15 +493,18 @@ class FlintClient {
     RetryConfig? retryConfig,
     JsonParser<T>? parser,
     ErrorHandler? onError,
+    required StatusCodeConfig? statusConfig,
+    RequestDoneCallback? onDone,
   }) async {
     _ensureNotDisposed();
+    final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
 
     final effectiveRetryConfig = retryConfig ?? defaultRetryConfig;
     int attempt = 1;
 
     while (true) {
       try {
-        return await _executeRequest<T>(
+        final response = await _executeRequest<T>(
           method,
           path,
           body: body,
@@ -466,7 +516,10 @@ class FlintClient {
           parser: parser,
           onError: onError,
           attempt: attempt,
+          statusConfig: effectiveStatusConfig, // Pass to execute
         );
+        onDone?.call(response, null);
+        return response;
       } catch (e) {
         final error = e is FlintError
             ? e
@@ -489,7 +542,15 @@ class FlintClient {
         }
 
         // If we shouldn't retry or max attempts reached, handle the error
-        return _handleError<T>(error, onError: onError, method: method);
+        final errorResponse = _handleError<T>(
+          error,
+          onError: onError,
+          method: method,
+          statusConfig: effectiveStatusConfig,
+        );
+        // Call onDone callback for error responses
+        onDone?.call(errorResponse, error);
+        return errorResponse;
       }
     }
   }
@@ -507,6 +568,7 @@ class FlintClient {
     JsonParser<T>? parser,
     ErrorHandler? onError,
     int attempt = 1,
+    StatusCodeConfig? statusConfig,
   }) async {
     final url = Uri.parse('$baseUrl$path');
     _log('$method $url (attempt $attempt)');
@@ -596,8 +658,9 @@ class FlintClient {
           maxAge: effectiveCacheConfig.maxAge,
         );
         await cacheStore.set<T>(cacheKey, cachedResponse);
-        _log(
-          'Cached response: $cacheKey (maxAge: ${effectiveCacheConfig.maxAge})',
+        _log
+        (
+            'Cached response: $cacheKey (maxAge: ${effectiveCacheConfig.maxAge})',
         );
       } catch (e) {
         _log('Failed to cache response: $e');
@@ -788,13 +851,17 @@ class FlintClient {
     Uri? url,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) async {
     try {
+      final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
+
       final contentType = response.headers.contentType?.mimeType ?? '';
       final bytes = await _readAllBytes(response);
 
       // Handle error status codes
-      if (response.statusCode >= 400) {
+      // Only throw error if status is configured as error
+      if (effectiveStatusConfig.isError(response.statusCode)) {
         final errorMessage = utf8.decode(bytes, allowMalformed: true);
         throw FlintError(
           'HTTP ${response.statusCode}: $errorMessage',
@@ -813,6 +880,7 @@ class FlintClient {
           url: url,
           method: method,
           duration: duration,
+          statusConfig: effectiveStatusConfig,
         );
       } else if (contentType.contains('text') || contentType.contains('html')) {
         return await _handleTextResponse<T>(
@@ -822,6 +890,7 @@ class FlintClient {
           url: url,
           method: method,
           duration: duration,
+          statusConfig: effectiveStatusConfig,
         );
       } else {
         return await _handleBinaryResponse<T>(
@@ -832,6 +901,7 @@ class FlintClient {
           url: url,
           method: method,
           duration: duration,
+          statusConfig: effectiveStatusConfig,
         );
       }
     } catch (e) {
@@ -847,7 +917,10 @@ class FlintClient {
     Uri? url,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) async {
+    final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
+
     try {
       dynamic data;
 
@@ -877,6 +950,7 @@ class FlintClient {
         url: url,
         method: method,
         duration: duration,
+        statusConfig: effectiveStatusConfig,
       );
     } catch (e) {
       if (e is FlintError) rethrow;
@@ -898,7 +972,10 @@ class FlintClient {
     Uri? url,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) async {
+    final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
+
     try {
       final textData = utf8.decode(bytes);
       T data;
@@ -918,6 +995,7 @@ class FlintClient {
         data: data,
         type: FlintResponseType.text,
         headers: response.headers,
+        statusConfig: effectiveStatusConfig,
       );
     } catch (e) {
       if (e is FlintError) rethrow;
@@ -938,7 +1016,10 @@ class FlintClient {
     Uri? url,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) async {
+    final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
+
     try {
       final fileName =
           saveFilePath ?? _extractFileName(response, Uri.parse('$baseUrl'));
@@ -968,6 +1049,7 @@ class FlintClient {
         data: data,
         type: FlintResponseType.file,
         headers: response.headers,
+        statusConfig: effectiveStatusConfig,
       );
     } catch (e) {
       if (e is FlintError) rethrow;
@@ -990,24 +1072,24 @@ class FlintClient {
 
       // Handle common type conversions
       switch (T) {
-        case String:
+        case const (String):
           return data.toString() as T;
-        case int:
+        case const (int):
           if (data is String) {
             return int.tryParse(data) as T? ?? 0 as T;
           }
           return (data is num ? data.toInt() : 0) as T;
-        case double:
+        case const (double):
           if (data is String) {
             return double.tryParse(data) as T? ?? 0.0 as T;
           }
           return (data is num ? data.toDouble() : 0.0) as T;
-        case bool:
+        case const (bool):
           if (data is String) {
             return (data.toLowerCase() == 'true') as T;
           }
           return (data is bool ? data : false) as T;
-        case Map:
+        case const (Map):
           if (data is String && responseType == FlintResponseType.json) {
             try {
               return jsonDecode(data) as T;
@@ -1016,7 +1098,7 @@ class FlintClient {
             }
           }
           return (data is Map ? data : {}) as T;
-        case List:
+        case const (List):
           if (data is String && responseType == FlintResponseType.json) {
             try {
               return jsonDecode(data) as T;
@@ -1069,7 +1151,10 @@ class FlintClient {
     ErrorHandler? onError,
     String? method,
     Duration? duration,
+    StatusCodeConfig? statusConfig,
   }) {
+    final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
+
     _log('Error: ${error.message}');
 
     // Priority: per-request error handler > global error handler
@@ -1079,7 +1164,12 @@ class FlintClient {
       this.onError!(error);
     }
 
-    return FlintResponse.error(error, method: method, duration: duration);
+    return FlintResponse.error(
+      error,
+      method: method,
+      duration: duration,
+      statusConfig: effectiveStatusConfig,
+    );
   }
 
   Future<List<int>> _readAllBytes(HttpClientResponse response) async {
@@ -1149,7 +1239,10 @@ class FlintClient {
     ProgressCallback? onProgress,
     RetryConfig? retryConfig,
     ErrorHandler? onError,
+    StatusCodeConfig? statusConfig,
   }) async {
+    final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
+
     final effectiveRetryConfig = retryConfig ?? defaultRetryConfig;
     int attempt = 1;
 
@@ -1201,7 +1294,11 @@ class FlintClient {
         }
 
         // If we shouldn't retry or max attempts reached, handle the error
-        _handleError<dynamic>(error, onError: onError);
+        _handleError<dynamic>(
+          error,
+          onError: onError,
+          statusConfig: effectiveStatusConfig,
+        );
         throw error;
       }
     }
