@@ -102,19 +102,15 @@ class FlintResponse<T> {
   ///
   /// [error] is the [FlintError] representing the error details.
   FlintResponse.error(
-    FlintError error, {
-    HttpHeaders? headers,
-    String? method,
-    Duration? duration,
+    FlintError this.error, {
+    this.headers,
+    this.method,
+    this.duration,
     StatusCodeConfig? statusConfig,
   }) : statusCode = error.statusCode ?? 500,
        data = null,
        isError = true,
        success = false,
-       error = error,
-       headers = headers,
-       method = method,
-       duration = duration,
        url = error.url,
        type = FlintResponseType.unknown,
        timestamp = error.timestamp,
@@ -185,7 +181,6 @@ class FlintResponse<T> {
   /// Returns true if the response type is binary.
   bool get isBinary => type == FlintResponseType.binary;
   bool get isSuccess => statusConfig.isSuccess(statusCode);
-  
 
   /// Status helpers that use the config (NOT hardcoded values)
   bool get isClientError => statusConfig.isClientError(statusCode);

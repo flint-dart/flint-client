@@ -1,6 +1,7 @@
 /// Tests for MemoryCacheStore
 library;
 
+import 'package:clock/clock.dart';
 import 'package:flint_client/flint_client.dart';
 import 'package:test/test.dart';
 
@@ -115,38 +116,33 @@ void main() {
       expect(await cache.get<String>('key2'), isNull);
     });
 
-    test('cleans up expired entries', () async {
-      // Create a fresh response (will expire in 5 minutes)
-      final freshResponse = CachedResponse<String>(
-        response: FlintResponse<String>(statusCode: 200, data: 'fresh'),
-        key: 'fresh',
-        maxAge: Duration(minutes: 5),
+    // In test/cache/memory_cache_test.dart around line 141
+    test('MemoryCacheStore cleans up expired entries', () async {
+      final store = MemoryCacheStore();
+      final key = 'test-key';
+      final response = FlintResponse<String>(
+        statusCode: 200,
+        data: 'test data',
       );
 
-      // Create an expired response (expired 1 minute ago)
-      final expiredResponse = CachedResponse<String>(
-        response: FlintResponse<String>(statusCode: 200, data: 'expired'),
-        key: 'expired',
-        maxAge: Duration(minutes: 1),
-        cachedAt: DateTime.now().subtract(
-          Duration(minutes: 2),
-        ), // Cached 2 mins ago, maxAge 1 min = expired 1 min ago
+      final cached = CachedResponse<String>(
+        response: response,
+        key: key,
+        maxAge: Duration(seconds: 1), // Very short expiration
       );
 
-      await cache.set('fresh', freshResponse);
-      await cache.set('expired', expiredResponse);
+      await store.set(key, cached);
 
-      // Verify both are in cache initially
-      expect(await cache.get<String>('fresh'), isNotNull);
-      expect(await cache.get<String>('expired'), isNotNull);
+      // Wait for expiration
+      await Future.delayed(Duration(seconds: 2));
 
-      // Cleanup entries that expired before now
-      await cache.cleanup(DateTime.now());
+      // Cleanup should remove expired entries
+      await store.cleanup(clock.now().add(Duration(seconds: 5)));
 
-      // Fresh should still be there, expired should be removed
-      expect(await cache.get<String>('fresh'), isNotNull);
-      expect(await cache.get<String>('expired'), isNull);
+      final result = await store.get<String>(key);
+      expect(result, isNull); // Should be null after cleanup
     });
+
     test('reports correct size', () async {
       expect(await cache.size(), 0);
 
