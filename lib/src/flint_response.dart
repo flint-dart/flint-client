@@ -21,6 +21,9 @@ enum FlintResponseType {
 
   /// Response is binary data
   binary,
+
+  ///   stream, // ADD this line
+  stream,
 }
 
 /// Represents a response from the Flint client.

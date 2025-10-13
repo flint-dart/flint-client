@@ -719,13 +719,5 @@ For more help, check out:
 - [Issue Tracker](https://github.com/flint-dart/flint-client/issues)
 
 Happy coding! 🎯
-```
 
-This comprehensive `example.md` covers:
 
-- ✅ **All major features** of your Flint Client
-- ✅ **Real-world use cases** with practical examples
-- ✅ **Flutter integration** with complete app example
-- ✅ **Advanced scenarios** like multiple APIs and custom cache
-- ✅ **Error handling** patterns
-- ✅ **Performance tips**

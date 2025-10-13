@@ -13,5 +13,8 @@ export 'src/ai/model/ai_model.dart';
 export 'src/ai/provider/ai_provider.dart';
 export 'src/ai/provider/hugging_face_provider.dart';
 export 'src/ai/provider/open_ai_provider.dart';
+export 'src/cache/cache_config.dart';
+export 'src/flint_web_socket_client.dart';
+export 'src/enum/websocket_connection_state.dart';
 
 // TODO: Export any libraries intended for clients of this package.

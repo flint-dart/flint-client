@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:clock/clock.dart';
+import 'package:flint_client/src/flint_web_socket_client.dart';
 import 'package:flint_client/src/status_code_config.dart';
 
 // Import your existing files
@@ -148,6 +149,43 @@ class FlintClient {
     if (debug) {
       print('[FlintClient] $message');
     }
+  }
+
+  // WITH this improved version:
+  FlintWebSocketClient ws(
+    String path, {
+    Map<String, dynamic>? params,
+    Map<String, String>? headers,
+  }) {
+    _ensureBaseUrl();
+
+    // Improved URL handling for both http and https
+    final wsUrl =
+        baseUrl!.replaceFirst(RegExp(r'^http'), 'ws') + _normalizePath(path);
+
+    // Merge headers properly
+    final mergedHeaders = <String, String>{...this.headers, ...headers ?? {}};
+
+    // Extract token from Authorization header
+    String? token;
+    final authHeader = mergedHeaders['Authorization'];
+    if (authHeader != null && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+
+    return FlintWebSocketClient(
+      wsUrl,
+      params: params,
+      token: token,
+      headers: mergedHeaders,
+      debug: debug,
+    );
+  }
+
+  // ADD this helper method (put it near other helper methods):
+  String _normalizePath(String path) {
+    if (path.startsWith('/')) return path;
+    return '/$path';
   }
 
   /// Sends a GET request to [path] with optional query parameters, headers,
