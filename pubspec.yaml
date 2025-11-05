@@ -1,6 +1,6 @@
 name: flint_client
 description: A powerful, type-safe HTTP client for Dart with interceptors, caching, retries, and comprehensive error handling."
-version: 0.0.1+2
+version: 0.0.1+3
 repository: https://github.com/flint-dart/flint-client
 homepage: https://flintdart.eulogia.net
 issue_tracker: https://github.com/flint-dart/flint-client/issues
