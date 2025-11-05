@@ -1,71 +1,87 @@
-import 'dart:io';
-import 'package:flint_client/src/ai/model/ai_model.dart';
-import 'package:flint_client/src/flint_response.dart';
+import 'package:flint_client/flint_client.dart';
 
+/// Base AI provider — stores conversation history and context memory
 abstract class AIProvider {
   final String baseUrl;
   final Map<String, String> headers;
-  final List<AIMessage> _history = []; // stores conversation
+  final List<AIMessage> _history = [];
+  final List<String> _contextMemory = [];
 
   AIProvider({required this.baseUrl, this.headers = const {}});
+  List<AIMessage> get history => _history;
 
-  /// Sends a request to the AI model with optional conversation history
+  /// Add a text snippet to context memory
+  void addContextMemory(String text) {
+    if (text.trim().isEmpty) {
+      throw Exception("❌ Context text cannot be empty.");
+    }
+    _contextMemory.add(text);
+  }
+
+  /// Clear all context memory
+  void clearContextMemory() => _contextMemory.clear();
+
+  /// Add a message to conversation history
+  void addMessage(String role, String content) =>
+      _history.add(AIMessage(role: role, content: content));
+
+  /// Add a message to conversation history
+  void addAllMessage(List<AIMessage> messages) => _history.addAll(messages);
+
+  /// Reset conversation history
+  void resetHistory() => _history.clear();
+
+  /// Sends a request to AI with optional history and context
   Future<FlintResponse<dynamic>> request({
     required String model,
     String? prompt,
-    Map<String, File>? files,
-    FlintResponseType responseType = FlintResponseType.json,
+    bool includeHistory = true,
+    bool includeContext = true,
     int maxTokens = 256,
-    bool includeHistory = true, // new flag
   }) async {
-    // Add the user's message to history
     if (prompt != null) {
-      _history.add(AIMessage(role: 'user', content: prompt));
+      addMessage('user', prompt);
     }
 
-    // Build the payload including conversation if requested
-    final payload = _buildPayload(
+    final combinedPrompt = includeContext && _contextMemory.isNotEmpty
+        ? "Context:\n${_contextMemory.join('\n\n')}\n\nUser: $prompt"
+        : prompt;
+
+    final payload = buildPayload(
       model,
-      prompt,
-      files,
+      combinedPrompt,
       maxTokens,
       includeHistory,
     );
 
     final response = await sendRequest(model, payload);
 
-    // Add AI response to history
     if (response.data != null) {
-      _history.add(
-        AIMessage(role: 'assistant', content: response.data.toString()),
-      );
+      addMessage('assistant', response.data.toString());
     }
 
     return response;
   }
 
-  /// Each provider implements how the request is actually sent
-  Future<FlintResponse<dynamic>> sendRequest(String model, dynamic payload);
-
-  /// Build the payload including history
-  dynamic _buildPayload(
+  /// Build payload — can be overridden per provider
+  dynamic buildPayload(
     String model,
     String? prompt,
-    Map<String, File>? files,
     int maxTokens,
     bool includeHistory,
   ) {
-    if (includeHistory) {
-      return {
-        'model': model,
-        'inputs': _history.map((m) => m.toJson()).toList(),
-        'max_tokens': maxTokens,
-      };
-    } else {
-      return {'model': model, 'inputs': prompt, 'max_tokens': maxTokens};
-    }
+    // Default implementation (can be overridden)
+    final fullPrompt = includeHistory
+        ? "${_history.map((m) => "${m.role}: ${m.content}").join("\n")}\n${prompt ?? ''}"
+        : prompt ?? '';
+
+    return {
+      'model': model,
+      'prompt': fullPrompt,
+      'max_output_tokens': maxTokens,
+    };
   }
 
-  /// Optional: reset conversation history
-  void resetHistory() => _history.clear();
+  /// Must be implemented by each provider (Gemini, HF, etc.)
+  Future<FlintResponse<dynamic>> sendRequest(String model, dynamic payload);
 }

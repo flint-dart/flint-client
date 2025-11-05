@@ -803,8 +803,11 @@ class FlintClient {
     ProgressCallback? onSendProgress,
   ) async {
     try {
-      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-      final jsonData = jsonEncode(body);
+      request.headers.set(
+        HttpHeaders.contentTypeHeader,
+        'application/json; charset=UTF-8',
+      );
+      final jsonData = body is String ? body : jsonEncode(body);
       final dataBytes = utf8.encode(jsonData);
 
       if (onSendProgress != null) {

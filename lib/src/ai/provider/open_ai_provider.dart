@@ -1,5 +1,3 @@
-// ignore_for_file: file_names
-
 import 'package:flint_client/src/ai/provider/ai_provider.dart';
 import 'package:flint_client/src/flint_client_base.dart';
 import 'package:flint_client/src/flint_response.dart';
@@ -21,11 +19,17 @@ class OpenAIProvider extends AIProvider {
   ) async {
     final client = FlintClient(baseUrl: baseUrl, headers: headers, debug: true);
 
-    // OpenAI expects messages array for chat models
+    // Extract inputs and prepare messages
+    final inputs = payload['inputs'];
+
     final requestBody = {
       'model': model,
-      'messages': payload['inputs'], // includes history
-      'max_tokens': payload['max_tokens'],
+      'messages': inputs is List
+          ? inputs // already structured chat messages
+          : [
+              {'role': 'user', 'content': inputs.toString()},
+            ],
+      'max_tokens': payload['max_tokens'] ?? 256,
     };
 
     return await client.post('/chat/completions', body: requestBody);

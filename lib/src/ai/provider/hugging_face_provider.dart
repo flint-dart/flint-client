@@ -16,6 +16,16 @@ class HuggingFaceProvider extends AIProvider {
     dynamic payload,
   ) async {
     final client = FlintClient(baseUrl: baseUrl, headers: headers, debug: true);
-    return await client.post('/$model', body: payload);
+
+    // Hugging Face expects a 'inputs' key in the body for text models
+    final inputData = payload['inputs'] ?? payload['prompt'] ?? payload;
+
+    final body = {
+      'inputs': inputData,
+      // Optional parameters like max_length, temperature, etc. can be added later
+      if (payload['parameters'] != null) 'parameters': payload['parameters'],
+    };
+
+    return await client.post('/$model', body: body);
   }
 }
