@@ -2,9 +2,7 @@ import 'package:flint_client/flint_client.dart';
 import 'package:flint_client/src/ai/response/gemini_response.dart';
 
 void main(List<String> args) async {
-  final gemini = GeminiProvider(
-    apiKey: 'AIzaSyB_ac0ehJyYZEwy02DySdYDT9STgP09WPw',
-  );
+  final gemini = GeminiProvider(apiKey: '');
 
   gemini.addContextMemory(
     """Eulogia Technologies is a technology company that builds reliable software, hosting solutions, and learning platforms.  
