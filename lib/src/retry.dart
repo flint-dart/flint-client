@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flint_client/src/flint_error.dart';
 
 /// Configuration for request retries
-///
 
 typedef RetryEvaluator = bool Function(FlintError error, int attempt);
 
@@ -18,10 +17,10 @@ class RetryConfig {
   final RetryEvaluator? retryEvaluator;
 
   const RetryConfig({
-    this.maxAttempts = 3,
+    this.maxAttempts = 0,
     this.delay = const Duration(seconds: 1),
     this.maxDelay = const Duration(seconds: 30),
-    this.retryOnTimeout = true,
+    this.retryOnTimeout = false,
     this.retryStatusCodes = const {500, 502, 503, 504, 408, 429},
     this.retryExceptions = const {
       SocketException,
@@ -30,6 +29,13 @@ class RetryConfig {
     },
     this.retryEvaluator,
   });
+
+  /// Creates a RetryConfig that disables all retries
+  static const RetryConfig noRetry = RetryConfig(
+    maxAttempts: 0, // 0 means no retries - only the initial attempt
+    retryExceptions: {},
+    retryStatusCodes: {},
+  );
 
   RetryConfig copyWith({
     int? maxAttempts,
@@ -50,4 +56,7 @@ class RetryConfig {
       retryEvaluator: retryEvaluator ?? this.retryEvaluator,
     );
   }
+
+  /// Returns true if retries are enabled for this configuration
+  bool get shouldRetry => maxAttempts > 0;
 }

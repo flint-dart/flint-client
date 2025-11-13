@@ -13,13 +13,13 @@ import 'package:flint_client/flint_client.dart';
 void main() async {
   final client = FlintClient(
     baseUrl: 'https://httpstat.us',
-    defaultRetryConfig: RetryConfig(
-      maxAttempts: 3,
-      delay: Duration(seconds: 1),
-      maxDelay: Duration(seconds: 10),
-      retryOnTimeout: true,
-      retryStatusCodes: {500, 502, 503, 504, 408, 429},
-    ),
+    // defaultRetryConfig: RetryConfig(
+    //   maxAttempts: 3,
+    //   delay: Duration(seconds: 1),
+    //   maxDelay: Duration(seconds: 10),
+    //   retryOnTimeout: true,
+    //   retryStatusCodes: {500, 502, 503, 504, 408, 429},
+    // ),
     debug: true,
   );
 

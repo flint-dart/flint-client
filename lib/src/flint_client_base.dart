@@ -59,7 +59,7 @@ class FlintClient {
   /// Default cache configuration
   final CacheConfig defaultCacheConfig;
 
-  /// Default retry configuration
+  /// Default retry configuration - CHANGED: No retry by default
   final RetryConfig defaultRetryConfig;
 
   /// Enables debug logging if true.
@@ -80,7 +80,7 @@ class FlintClient {
   /// before sending requests or after receiving responses.
   /// [cacheStore] provides cache storage (defaults to MemoryCacheStore).
   /// [defaultCacheConfig] sets default caching behavior.
-  /// [defaultRetryConfig] sets default retry behavior.
+  /// [defaultRetryConfig] sets default retry behavior - CHANGED: No retry by default.
   /// [debug] enables console logging.
   bool _isDisposed = false;
   final RequestDoneCallback? onDone;
@@ -90,18 +90,18 @@ class FlintClient {
     this.headers = const {},
     this.timeout = const Duration(seconds: 30),
     this.onError,
-    this.onDone, // Add this
+    this.onDone,
     this.requestInterceptor,
     this.responseInterceptor,
     CacheStore? cacheStore,
     CacheConfig? defaultCacheConfig,
     RetryConfig? defaultRetryConfig,
     this.debug = false,
-    this.statusCodeConfig =
-        const StatusCodeConfig(), // Optional - defaults to standard
+    this.statusCodeConfig = const StatusCodeConfig(),
   }) : cacheStore = cacheStore ?? MemoryCacheStore(),
        defaultCacheConfig = defaultCacheConfig ?? const CacheConfig(),
-       defaultRetryConfig = defaultRetryConfig ?? const RetryConfig(),
+       // CHANGED: Default to no retries unless explicitly configured
+       defaultRetryConfig = defaultRetryConfig ?? RetryConfig.noRetry,
        _client = HttpClient()
          ..connectionTimeout = timeout
          ..idleTimeout = timeout;
@@ -116,7 +116,7 @@ class FlintClient {
     ResponseInterceptor? responseInterceptor,
     CacheStore? cacheStore,
     CacheConfig? defaultCacheConfig,
-    RequestDoneCallback? onDone, // Add this
+    RequestDoneCallback? onDone,
     RetryConfig? defaultRetryConfig,
     bool? debug,
     StatusCodeConfig? statusCodeConfig,
@@ -126,7 +126,7 @@ class FlintClient {
       headers: headers ?? this.headers,
       timeout: timeout ?? this.timeout,
       onError: onError ?? this.onError,
-      onDone: onDone ?? this.onDone, // Add this
+      onDone: onDone ?? this.onDone,
       requestInterceptor: requestInterceptor ?? this.requestInterceptor,
       responseInterceptor: responseInterceptor ?? this.responseInterceptor,
       cacheStore: cacheStore ?? this.cacheStore,
@@ -151,7 +151,7 @@ class FlintClient {
     }
   }
 
-  // WITH this improved version:
+  // WebSocket client method
   FlintWebSocketClient ws(
     String path, {
     Map<String, dynamic>? params,
@@ -159,14 +159,11 @@ class FlintClient {
   }) {
     _ensureBaseUrl();
 
-    // Improved URL handling for both http and https
     final wsUrl =
         baseUrl!.replaceFirst(RegExp(r'^http'), 'ws') + _normalizePath(path);
 
-    // Merge headers properly
     final mergedHeaders = <String, String>{...this.headers, ...headers ?? {}};
 
-    // Extract token from Authorization header
     String? token;
     final authHeader = mergedHeaders['Authorization'];
     if (authHeader != null && authHeader.startsWith('Bearer ')) {
@@ -182,7 +179,6 @@ class FlintClient {
     );
   }
 
-  // ADD this helper method (put it near other helper methods):
   String _normalizePath(String path) {
     if (path.startsWith('/')) return path;
     return '/$path';
@@ -196,9 +192,8 @@ class FlintClient {
     Map<String, String>? headers,
     String? saveFilePath,
     CacheConfig? cacheConfig,
-    StatusCodeConfig? statusConfig, // ADD THIS
-
-    RetryConfig? retryConfig,
+    StatusCodeConfig? statusConfig,
+    RetryConfig? retryConfig, // Only retry if explicitly provided
     JsonParser<T>? parser,
     ErrorHandler? onError,
     RequestDoneCallback? onDone,
@@ -217,7 +212,7 @@ class FlintClient {
       saveFilePath: saveFilePath,
       cacheConfig: cacheConfig,
       statusConfig: statusConfig,
-      retryConfig: retryConfig,
+      retryConfig: retryConfig, // Pass through - will be null by default
       parser: parser,
       onError: onError,
       onDone: mainOnDone,
@@ -234,10 +229,9 @@ class FlintClient {
     String? saveFilePath,
     Map<String, File>? files,
     ProgressCallback? onSendProgress,
-    StatusCodeConfig? statusConfig, // ADD THIS
-
+    StatusCodeConfig? statusConfig,
     CacheConfig? cacheConfig,
-    RetryConfig? retryConfig,
+    RetryConfig? retryConfig, // Only retry if explicitly provided
     JsonParser<T>? parser,
     ErrorHandler? onError,
     RequestDoneCallback? onDone,
@@ -260,7 +254,7 @@ class FlintClient {
       statusConfig: statusConfig,
       onSendProgress: onSendProgress,
       cacheConfig: cacheConfig,
-      retryConfig: retryConfig,
+      retryConfig: retryConfig, // Pass through - will be null by default
       parser: parser,
       onError: onError,
       onDone: mainOnDone,
@@ -276,10 +270,9 @@ class FlintClient {
     String? saveFilePath,
     Map<String, File>? files,
     ProgressCallback? onSendProgress,
-    StatusCodeConfig? statusConfig, // ADD THIS
-
+    StatusCodeConfig? statusConfig,
     CacheConfig? cacheConfig,
-    RetryConfig? retryConfig,
+    RetryConfig? retryConfig, // Only retry if explicitly provided
     JsonParser<T>? parser,
     ErrorHandler? onError,
     RequestDoneCallback? onDone,
@@ -302,7 +295,7 @@ class FlintClient {
       onSendProgress: onSendProgress,
       statusConfig: statusConfig,
       cacheConfig: cacheConfig,
-      retryConfig: retryConfig,
+      retryConfig: retryConfig, // Pass through - will be null by default
       parser: parser,
       onError: onError,
       onDone: mainOnDone,
@@ -319,10 +312,9 @@ class FlintClient {
     Map<String, File>? files,
     ProgressCallback? onSendProgress,
     CacheConfig? cacheConfig,
-    RetryConfig? retryConfig,
+    RetryConfig? retryConfig, // Only retry if explicitly provided
     JsonParser<T>? parser,
-    StatusCodeConfig? statusConfig, // ADD THIS
-
+    StatusCodeConfig? statusConfig,
     ErrorHandler? onError,
     RequestDoneCallback? onDone,
   }) {
@@ -343,7 +335,7 @@ class FlintClient {
       files: files,
       onSendProgress: onSendProgress,
       cacheConfig: cacheConfig,
-      retryConfig: retryConfig,
+      retryConfig: retryConfig, // Pass through - will be null by default
       statusConfig: statusConfig,
       parser: parser,
       onError: onError,
@@ -359,9 +351,8 @@ class FlintClient {
     Map<String, String>? headers,
     String? saveFilePath,
     CacheConfig? cacheConfig,
-    StatusCodeConfig? statusConfig, // ADD THIS
-
-    RetryConfig? retryConfig,
+    StatusCodeConfig? statusConfig,
+    RetryConfig? retryConfig, // Only retry if explicitly provided
     JsonParser<T>? parser,
     ErrorHandler? onError,
     RequestDoneCallback? onDone,
@@ -380,7 +371,7 @@ class FlintClient {
       headers: headers,
       saveFilePath: saveFilePath,
       cacheConfig: cacheConfig,
-      retryConfig: retryConfig,
+      retryConfig: retryConfig, // Pass through - will be null by default
       statusConfig: statusConfig,
       parser: parser,
       onError: onError,
@@ -461,16 +452,22 @@ class FlintClient {
     return sortedMap;
   }
 
-  /// Determines if a request should be retried based on the error and retry config
+  //// Determines if a request should be retried based on the error and retry config
   bool _shouldRetry(FlintError error, int attempt, RetryConfig retryConfig) {
-    // Check custom evaluator first
-    if (retryConfig.retryEvaluator != null) {
-      return retryConfig.retryEvaluator!(error, attempt);
+    // If maxAttempts is 0, NEVER retry (this is the "no retry" case)
+    if (retryConfig.maxAttempts == 0) {
+      return false;
     }
 
     // Check if we've exceeded max attempts
-    if (attempt >= retryConfig.maxAttempts) {
+    // attempt starts at 1, so if maxAttempts=1, we allow attempt=1 but not attempt=2
+    if (attempt > retryConfig.maxAttempts) {
       return false;
+    }
+
+    // Check custom evaluator first
+    if (retryConfig.retryEvaluator != null) {
+      return retryConfig.retryEvaluator!(error, attempt);
     }
 
     // Check status code retries
@@ -537,6 +534,7 @@ class FlintClient {
     _ensureNotDisposed();
     final effectiveStatusConfig = statusConfig ?? statusCodeConfig;
 
+    // CHANGED: Use provided retryConfig or default (which is no-retry)
     final effectiveRetryConfig = retryConfig ?? defaultRetryConfig;
     int attempt = 1;
 
@@ -554,7 +552,7 @@ class FlintClient {
           parser: parser,
           onError: onError,
           attempt: attempt,
-          statusConfig: effectiveStatusConfig, // Pass to execute
+          statusConfig: effectiveStatusConfig,
         );
         onDone?.call(response, null);
         return response;
@@ -567,7 +565,7 @@ class FlintClient {
                 method: method,
               );
 
-        // Check if we should retry
+        // CHANGED: Only retry if explicitly configured to do so
         if (_shouldRetry(error, attempt, effectiveRetryConfig)) {
           final delay = _calculateRetryDelay(attempt, effectiveRetryConfig);
           _log(
