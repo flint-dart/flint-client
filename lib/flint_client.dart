@@ -17,5 +17,9 @@ export 'src/cache/cache_config.dart';
 export 'src/flint_web_socket_client.dart';
 export 'src/enum/websocket_connection_state.dart';
 export 'src/ai/provider/gemini_provider.dart';
+export "src/ai/response/gemini_chat_response.dart";
+export "src/ai/response/gemini_response.dart";
+export "src/ai/response/hugging_face_response.dart";
+export "src/ai/response/open_ai_response.dart";
 
 // TODO: Export any libraries intended for clients of this package.
