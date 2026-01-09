@@ -1,5 +1,4 @@
 import 'package:flint_client/flint_client.dart';
-import 'package:flint_client/src/ai/response/gemini_response.dart';
 
 void main(List<String> args) async {
   final gemini = GeminiProvider(apiKey: '');

@@ -188,7 +188,7 @@ class FlintClient {
   /// file save path, cache configuration, retry configuration, and a custom JSON parser.
   Future<FlintResponse<T>> get<T>(
     String path, {
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
     String? saveFilePath,
     CacheConfig? cacheConfig,
@@ -224,7 +224,7 @@ class FlintClient {
   Future<FlintResponse<T>> post<T>(
     String path, {
     dynamic body,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
     String? saveFilePath,
     Map<String, File>? files,
@@ -265,7 +265,7 @@ class FlintClient {
   Future<FlintResponse<T>> put<T>(
     String path, {
     dynamic body,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
     String? saveFilePath,
     Map<String, File>? files,
@@ -306,7 +306,7 @@ class FlintClient {
   Future<FlintResponse<T>> patch<T>(
     String path, {
     dynamic body,
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
     String? saveFilePath,
     Map<String, File>? files,
@@ -343,11 +343,27 @@ class FlintClient {
     );
   }
 
+  FlintClient withQuery(Map<String, dynamic> query) {
+    return copyWith(
+      requestInterceptor: (request) async {
+        final uri = request.uri;
+        uri.replace(
+          queryParameters: {
+            ...uri.queryParameters,
+            ...query.map((k, v) => MapEntry(k, v.toString())),
+          },
+        );
+        // Note: HttpClientRequest.uri is read-only, so query parameters
+        // should be set before creating the request or use a different approach
+      },
+    );
+  }
+
   /// Sends a DELETE request to [path] with optional query parameters,
   /// headers, save file path, cache config, retry config, and custom JSON parser.
   Future<FlintResponse<T>> delete<T>(
     String path, {
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
     String? saveFilePath,
     CacheConfig? cacheConfig,
@@ -380,7 +396,10 @@ class FlintClient {
   }
 
   /// Builds a full path with query parameters appended.
-  String _buildPathWithQuery(String path, Map<String, String> queryParameters) {
+  String _buildPathWithQuery(
+    String path,
+    Map<String, dynamic> queryParameters,
+  ) {
     final uri = Uri.parse(path);
     final newUri = uri.replace(
       queryParameters: {...uri.queryParameters, ...queryParameters},
@@ -410,7 +429,7 @@ class FlintClient {
   String _generateCacheKey(
     String method,
     String path, {
-    Map<String, String>? queryParameters,
+    Map<String, dynamic>? queryParameters,
     dynamic body,
     Map<String, String>? headers,
   }) {

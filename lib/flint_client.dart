@@ -21,5 +21,6 @@ export "src/ai/response/gemini_chat_response.dart";
 export "src/ai/response/gemini_response.dart";
 export "src/ai/response/hugging_face_response.dart";
 export "src/ai/response/open_ai_response.dart";
+export "src/status_code_config.dart";
 
 // TODO: Export any libraries intended for clients of this package.
