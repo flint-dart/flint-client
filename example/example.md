@@ -13,6 +13,7 @@ A collection of practical examples showing how to use the Flint Client HTTP pack
 6. [Interceptors](#interceptors)
 7. [Error Handling](#error-handling)
 8. [Complete Flutter App](#complete-flutter-app)
+9. [WebSocket Auth](#websocket-auth)
 
 ---
 
@@ -721,3 +722,54 @@ For more help, check out:
 Happy coding! 🎯
 
 
+
+## WebSocket Auth
+
+### Use `FlintClient.ws(...)` with Bearer token from client headers
+
+```dart
+final client = FlintClient(
+  baseUrl: 'https://api.example.com',
+  headers: {'Authorization': 'Bearer your-jwt-token'},
+);
+
+final ws = client.ws('/socket', params: {'room': 'chat'});
+await ws.connect();
+```
+
+### Use token in query string (for servers that require it)
+
+```dart
+final ws = FlintWebSocketClient(
+  'ws://localhost:8080/ws',
+  sendTokenAsQuery: true,
+  queryTokenKey: 'token',
+  tokenProvider: () async => await loadTokenFromStorage(),
+);
+
+await ws.connect();
+```
+
+### Send auth event after connect (app-level auth)
+
+```dart
+final ws = FlintWebSocketClient(
+  'ws://localhost:8080/ws',
+  autoAuthEvent: true,
+  authEventName: 'auth',
+  authPayload: {'token': 'your-jwt-token'},
+);
+
+ws.on('connect', (_) {
+  ws.emit('join', {'room': 'orders'});
+});
+
+await ws.connect();
+```
+
+### Rotate token at runtime
+
+```dart
+ws.setToken('new-token');
+await ws.reconnect();
+```

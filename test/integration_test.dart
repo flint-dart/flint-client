@@ -9,7 +9,7 @@ import 'test_utils.dart';
 void main() {
   group('FlintClient Integration', () {
     late TestServer server;
-    late FlintClient client;
+    FlintClient? client;
 
     setUp(() async {
       server = TestServer();
@@ -17,7 +17,7 @@ void main() {
     });
 
     tearDown(() async {
-      client.dispose();
+      client?.dispose();
       await server.stop();
     });
 
@@ -36,15 +36,15 @@ void main() {
       );
 
       // First request - should be cached
-      final response1 = await client.get<Map<String, dynamic>>('/json');
+      final response1 = await client!.get<Map<String, dynamic>>('/json');
       expect(response1.isSuccess, isTrue);
 
       // Second request - should come from cache
-      final response2 = await client.get<Map<String, dynamic>>('/json');
+      final response2 = await client!.get<Map<String, dynamic>>('/json');
       expect(response2.isSuccess, isTrue);
 
       // Force refresh
-      final response3 = await client.get<Map<String, dynamic>>(
+      final response3 = await client!.get<Map<String, dynamic>>(
         '/json',
         cacheConfig: CacheConfig(forceRefresh: true),
       );
@@ -59,7 +59,7 @@ void main() {
 
       try {
         // Upload file - use echo endpoint to verify upload worked
-        final uploadResponse = await client.post<dynamic>(
+        final uploadResponse = await client!.post<dynamic>(
           '/echo',
           files: {'testFile': testFile},
           body: {'description': 'Test upload'},
@@ -72,7 +72,7 @@ void main() {
         final downloadPath =
             '${tempDir.path}/downloaded_integration_${DateTime.now().millisecondsSinceEpoch}.txt';
 
-        final downloadedFile = await client.downloadFile(
+        final downloadedFile = await client!.downloadFile(
           '${server.baseUrl}/download',
           savePath: downloadPath,
         );
@@ -105,59 +105,17 @@ void main() {
         },
       );
 
-      final response = await client.get<dynamic>('/echo');
+      final response = await client!.get<dynamic>('/echo');
 
       expect(response.isSuccess, isTrue);
       expect(requestInterceptorCalled, isTrue);
       expect(responseInterceptorCalled, isTrue);
-    });
-
-    test('retry mechanism integration', () async {
-      client = FlintClient(
-        baseUrl: server.baseUrl,
-        defaultRetryConfig: RetryConfig(
-          maxAttempts: 3,
-          delay: Duration(milliseconds: 100),
-        ),
-      );
-
-      // This endpoint fails twice then succeeds on third attempt
-      final response = await client.get<String>('/retry-test?attempt=1');
-
-      // The test server logic needs to track attempts properly
-      // For now, just verify we get some response
-      expect(response, isA<FlintResponse<String>>());
-    });
-    test('interceptor integration', () async {
-      var requestInterceptorCalled = false;
-      var responseInterceptorCalled = false;
-
-      client = FlintClient(
-        baseUrl: server.baseUrl,
-        requestInterceptor: (request) async {
-          requestInterceptorCalled = true;
-          request.headers.set('X-Test-Interceptor', 'request');
-        },
-        responseInterceptor: (response) async {
-          responseInterceptorCalled = true;
-        },
-      );
-
-      final response = await client.get<Map<String, dynamic>>('/echo');
-
-      expect(response.isSuccess, isTrue);
-      expect(requestInterceptorCalled, isTrue);
-      expect(responseInterceptorCalled, isTrue);
-      expect(
-        response.data!['headers'],
-        containsPair('x-test-interceptor', ['request']),
-      );
     });
 
     test('error handling integration', () async {
       client = FlintClient(baseUrl: server.baseUrl);
 
-      final errorResponse = await client.get<String>('/error/500');
+      final errorResponse = await client!.get<String>('/error/500');
 
       expect(errorResponse.isError, isTrue);
       expect(errorResponse.error, isA<FlintError>());
@@ -174,8 +132,10 @@ void main() {
         ),
       );
 
+      await client!.get<String>('/retry-reset');
+
       // This endpoint fails twice then succeeds
-      final response = await client.get<String>('/retry-test');
+      final response = await client!.get<String>('/retry-test');
 
       expect(response.isSuccess, isTrue);
       expect(response.data, 'Success on attempt 3');

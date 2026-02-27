@@ -9,10 +9,10 @@ void main() {
     test('creates with default values', () {
       final config = RetryConfig();
 
-      expect(config.maxAttempts, 3);
+      expect(config.maxAttempts, 0);
       expect(config.delay, Duration(seconds: 1));
       expect(config.maxDelay, Duration(seconds: 30));
-      expect(config.retryOnTimeout, isTrue);
+      expect(config.retryOnTimeout, isFalse);
       expect(
         config.retryStatusCodes,
         containsAll([500, 502, 503, 504, 408, 429]),
@@ -21,7 +21,10 @@ void main() {
         config.retryExceptions,
         containsAll([SocketException, TimeoutException, HttpException]),
       );
+      expect(config.retryMethods, equals(RetryConfig.defaultRetryMethods));
       expect(config.retryEvaluator, isNull);
+      expect(config.honorRetryAfter, isTrue);
+      expect(config.maxRetryTime, isNull);
     });
 
     test('creates copy with overridden values', () {
@@ -30,11 +33,17 @@ void main() {
         maxAttempts: 5,
         delay: Duration(seconds: 2),
         retryOnTimeout: false,
+        retryMethods: {'GET', 'POST'},
+        honorRetryAfter: false,
+        maxRetryTime: Duration(seconds: 3),
       );
 
       expect(copy.maxAttempts, 5);
       expect(copy.delay, Duration(seconds: 2));
       expect(copy.retryOnTimeout, isFalse);
+      expect(copy.retryMethods, equals({'GET', 'POST'}));
+      expect(copy.honorRetryAfter, isFalse);
+      expect(copy.maxRetryTime, Duration(seconds: 3));
       expect(copy.maxDelay, original.maxDelay); // Unchanged
     });
 

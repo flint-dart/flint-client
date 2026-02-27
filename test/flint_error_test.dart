@@ -15,6 +15,7 @@ void main() {
       expect(error.originalException, isNull);
       expect(error.url, isNull);
       expect(error.method, isNull);
+      expect(error.kind, FlintErrorKind.unknown);
       expect(error.timestamp, isA<DateTime>());
     });
 
@@ -83,10 +84,22 @@ void main() {
       final rateLimitError = FlintError('Rate limit', statusCode: 429);
 
       expect(networkError.isNetworkError, isTrue);
+      expect(networkError.kind, FlintErrorKind.network);
       expect(clientError.isClientError, isTrue);
       expect(serverError.isServerError, isTrue);
+      expect(serverError.kind, FlintErrorKind.http);
       expect(timeoutError.isTimeout, isTrue);
+      expect(timeoutError.kind, FlintErrorKind.timeout);
       expect(rateLimitError.isRateLimit, isTrue);
+    });
+
+    test('classifies cancelled and parse errors by kind', () {
+      final cancelled = FlintError('Request cancelled by user');
+      final parse = FlintError('Response parsing failed: invalid format');
+
+      expect(cancelled.kind, FlintErrorKind.cancelled);
+      expect(cancelled.isCancelled, isTrue);
+      expect(parse.kind, FlintErrorKind.parse);
     });
 
     test('determines retryability correctly', () {
@@ -142,6 +155,7 @@ void main() {
       expect(restored.statusCode, original.statusCode);
       expect(restored.url, original.url);
       expect(restored.method, original.method);
+      expect(restored.kind, original.kind);
       expect(restored.timestamp, original.timestamp);
     });
 

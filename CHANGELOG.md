@@ -1,6 +1,35 @@
              
 # Changelog
 
+## 0.0.2 - 2026-02-27
+
+### Added
+- Added file convenience APIs:
+  - `uploadFile(...)`
+  - `uploadFiles(...)`
+  - `saveResponseData(...)`
+- Added runnable examples:
+  - `example/lib/websocket_auth_example.dart`
+  - `example/lib/http_methods_and_download_example.dart`
+  - `example/lib/full_observability_mock_example.dart`
+
+### Improved
+- Improved WebSocket authentication flow in `FlintWebSocketClient`:
+  - token provider support
+  - token in query support
+  - auto auth event support
+  - runtime token/header updates
+- Improved WebSocket reconnect/close semantics and event handling.
+
+### Fixed
+- Fixed WebSocket handshake headers merge/auth forwarding behavior.
+
+### Tests
+- Added WebSocket auth tests:
+  - Authorization header handshake test
+  - token-in-query handshake test
+- Expanded file operation tests for upload/save helpers.
+
 ## 0.0.1+5
 ## 0.0.1+4
 ## 0.0.1+3

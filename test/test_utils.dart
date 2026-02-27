@@ -11,6 +11,8 @@ import 'package:test/test.dart';
 class TestServer {
   late HttpServer _server;
   int _port = 0;
+  int _retryAttempts = 0;
+  int _retryAfterAttempts = 0;
 
   int get port => _port;
   String get baseUrl => 'http://localhost:$port';
@@ -19,9 +21,11 @@ class TestServer {
   Future<void> start() async {
     _server = await HttpServer.bind('localhost', 0);
     _port = _server.port;
+    _retryAttempts = 0;
+    _retryAfterAttempts = 0;
 
-    _server.listen((HttpRequest request) {
-      _handleRequest(request);
+    _server.listen((HttpRequest request) async {
+      await _handleRequest(request);
     });
   }
 
@@ -30,7 +34,7 @@ class TestServer {
     await _server.close();
   }
 
-  void _handleRequest(HttpRequest request) {
+  Future<void> _handleRequest(HttpRequest request) async {
     final path = request.uri.path;
     final method = request.method;
 
@@ -74,15 +78,43 @@ class TestServer {
           ..statusCode = 200
           ..write('Plain text response')
           ..close();
+      } else if (path == '/xml') {
+        response
+          ..headers.contentType = ContentType('application', 'xml')
+          ..statusCode = 200
+          ..write('<note><id>1</id><name>Flint</name></note>')
+          ..close();
       } else if (path == '/echo') {
-        final headers = <String, String>{};
+        final headers = <String, List<String>>{};
         request.headers.forEach((name, values) {
-          headers[name] = values.join(', ');
+          headers[name] = List<String>.from(values);
         });
+
+        final rawBody = await utf8.decoder.bind(request).join();
+        dynamic parsedBody;
+        if (rawBody.isNotEmpty) {
+          try {
+            parsedBody = jsonDecode(rawBody);
+          } catch (_) {
+            parsedBody = rawBody;
+          }
+        }
+
+        final query = <String, String>{};
+        request.uri.queryParameters.forEach((key, value) {
+          query[key] = value;
+        });
+
+        final pathWithQuery = request.uri.hasQuery
+            ? '${request.uri.path}?${request.uri.query}'
+            : request.uri.path;
+
         final body = <String, dynamic>{
           'method': method,
-          'path': path,
+          'path': pathWithQuery,
+          'query': query,
           'headers': headers,
+          'body': parsedBody,
         };
 
         response
@@ -96,21 +128,43 @@ class TestServer {
           ..write('File content for download')
           ..close();
       } else if (path == '/retry-test') {
-        // Track retry attempts
-        final attempt =
-            int.tryParse(request.uri.queryParameters['attempt'] ?? '1') ?? 1;
-
-        if (attempt <= 2) {
+        _retryAttempts++;
+        if (_retryAttempts <= 2) {
           response
             ..statusCode = 500
-            ..write('Attempt $attempt failed')
+            ..write('Attempt $_retryAttempts failed')
             ..close();
         } else {
           response
             ..statusCode = 200
-            ..write('Success on attempt $attempt')
+            ..write('Success on attempt $_retryAttempts')
             ..close();
         }
+      } else if (path == '/retry-reset') {
+        _retryAttempts = 0;
+        _retryAfterAttempts = 0;
+        response
+          ..statusCode = 200
+          ..write('Retry counter reset')
+          ..close();
+      } else if (path == '/retry-after-test') {
+        _retryAfterAttempts++;
+        if (_retryAfterAttempts == 1) {
+          response.headers.set('Retry-After', '1');
+          response
+            ..statusCode = 429
+            ..write('Rate limited');
+        } else {
+          response
+            ..statusCode = 200
+            ..write('Retry-After respected');
+        }
+        response.close();
+      } else if (path == '/always-500') {
+        response
+          ..statusCode = 500
+          ..write('Always failing endpoint')
+          ..close();
       } else {
         response
           ..statusCode = 404

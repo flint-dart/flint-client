@@ -8,13 +8,25 @@ import 'package:flint_client/src/flint_error.dart';
 typedef RetryEvaluator = bool Function(FlintError error, int attempt);
 
 class RetryConfig {
+  static const Set<String> defaultRetryMethods = {
+    'GET',
+    'HEAD',
+    'PUT',
+    'DELETE',
+    'OPTIONS',
+    'TRACE',
+  };
+
   final int maxAttempts;
   final Duration delay;
   final Duration maxDelay;
   final bool retryOnTimeout;
   final Set<int> retryStatusCodes;
   final Set<Type> retryExceptions;
+  final Set<String> retryMethods;
   final RetryEvaluator? retryEvaluator;
+  final bool honorRetryAfter;
+  final Duration? maxRetryTime;
 
   const RetryConfig({
     this.maxAttempts = 0,
@@ -27,7 +39,10 @@ class RetryConfig {
       TimeoutException,
       HttpException,
     },
+    this.retryMethods = defaultRetryMethods,
     this.retryEvaluator,
+    this.honorRetryAfter = true,
+    this.maxRetryTime,
   });
 
   /// Creates a RetryConfig that disables all retries
@@ -35,6 +50,7 @@ class RetryConfig {
     maxAttempts: 0, // 0 means no retries - only the initial attempt
     retryExceptions: {},
     retryStatusCodes: {},
+    retryMethods: {},
   );
 
   RetryConfig copyWith({
@@ -44,7 +60,10 @@ class RetryConfig {
     bool? retryOnTimeout,
     Set<int>? retryStatusCodes,
     Set<Type>? retryExceptions,
+    Set<String>? retryMethods,
     RetryEvaluator? retryEvaluator,
+    bool? honorRetryAfter,
+    Duration? maxRetryTime,
   }) {
     return RetryConfig(
       maxAttempts: maxAttempts ?? this.maxAttempts,
@@ -53,7 +72,10 @@ class RetryConfig {
       retryOnTimeout: retryOnTimeout ?? this.retryOnTimeout,
       retryStatusCodes: retryStatusCodes ?? this.retryStatusCodes,
       retryExceptions: retryExceptions ?? this.retryExceptions,
+      retryMethods: retryMethods ?? this.retryMethods,
       retryEvaluator: retryEvaluator ?? this.retryEvaluator,
+      honorRetryAfter: honorRetryAfter ?? this.honorRetryAfter,
+      maxRetryTime: maxRetryTime ?? this.maxRetryTime,
     );
   }
 

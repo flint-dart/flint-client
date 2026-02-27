@@ -1,0 +1,1 @@
+enum ResponseParseMode { strict, lenient }
