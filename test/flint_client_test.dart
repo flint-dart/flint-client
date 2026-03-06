@@ -393,6 +393,25 @@ void main() {
           response,
           isErrorResponse(statusCode: 400, errorMessage: 'Bad Request'),
         );
+        expect(response.error?.data, 'Bad Request');
+      });
+
+      test('throws FlintError when throwIfError is enabled', () async {
+        final throwingClient = FlintClient(
+          baseUrl: server.baseUrl,
+          throwIfError: true,
+        );
+
+        await expectLater(
+          () => throwingClient.get<String>('/error/400'),
+          throwsA(
+            isA<FlintError>()
+                .having((e) => e.statusCode, 'statusCode', 400)
+                .having((e) => e.data, 'data', 'Bad Request'),
+          ),
+        );
+
+        throwingClient.dispose();
       });
 
       test('returns error response for 500 status', () async {
@@ -405,6 +424,28 @@ void main() {
             errorMessage: 'Internal Server Error',
           ),
         );
+      });
+
+      test('preserves JSON error object as FlintError.data', () async {
+        final response = await client.get<Map<String, dynamic>>('/error/json');
+
+        expect(response.isError, isTrue);
+        expect(response.statusCode, 422);
+        expect(response.error?.message, contains('Validation failed'));
+        expect(response.error?.data, isA<Map>());
+        expect(
+          response.error?.data,
+          containsPair('message', 'Validation failed'),
+        );
+      });
+
+      test('preserves JSON error list as FlintError.data', () async {
+        final response = await client.get<List<dynamic>>('/error/list');
+
+        expect(response.isError, isTrue);
+        expect(response.statusCode, 409);
+        expect(response.error?.data, isA<List>());
+        expect(response.error?.data, containsAll(['duplicate', 'conflict']));
       });
 
       test('handles network errors gracefully', () async {

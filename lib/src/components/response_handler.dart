@@ -39,10 +39,12 @@ class ResponseHandler {
       final bytes = await _readAllBytes(response);
 
       if (effectiveStatusConfig.isError(response.statusCode)) {
-        final errorMessage = utf8.decode(bytes, allowMalformed: true);
+        final errorData = _extractErrorData(bytes, contentType);
+        final errorMessage = _extractErrorMessage(errorData);
         throw FlintError.fromHttpResponse(
           response,
           customMessage: 'HTTP ${response.statusCode}: $errorMessage',
+          data: errorData,
           url: url,
           method: method,
         );
@@ -324,5 +326,37 @@ class ResponseHandler {
     } catch (e) {
       throw FlintError('Failed to read response bytes: ${e.toString()}');
     }
+  }
+
+  dynamic _extractErrorData(List<int> bytes, String contentType) {
+    final text = utf8.decode(bytes, allowMalformed: true);
+    if (text.trim().isEmpty) return null;
+
+    final lowerContentType = contentType.toLowerCase();
+    final looksJson =
+        lowerContentType.contains('json') ||
+        text.trimLeft().startsWith('{') ||
+        text.trimLeft().startsWith('[');
+    if (!looksJson) return text;
+
+    try {
+      return jsonDecode(text);
+    } catch (_) {
+      return text;
+    }
+  }
+
+  String _extractErrorMessage(dynamic errorData) {
+    if (errorData == null) return 'Unknown error';
+    if (errorData is String) return errorData;
+    if (errorData is Map) {
+      final candidate =
+          errorData['message'] ??
+          errorData['error'] ??
+          errorData['detail'] ??
+          errorData['title'];
+      if (candidate != null) return candidate.toString();
+    }
+    return errorData.toString();
   }
 }

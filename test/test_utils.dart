@@ -58,6 +58,25 @@ class TestServer {
           ..statusCode = 500
           ..write('Internal Server Error')
           ..close();
+      } else if (path == '/error/json') {
+        response
+          ..headers.contentType = ContentType.json
+          ..statusCode = 422
+          ..write(
+            jsonEncode({
+              'message': 'Validation failed',
+              'errors': {
+                'email': ['Invalid email'],
+              },
+            }),
+          )
+          ..close();
+      } else if (path == '/error/list') {
+        response
+          ..headers.contentType = ContentType.json
+          ..statusCode = 409
+          ..write(jsonEncode(['duplicate', 'conflict']))
+          ..close();
       } else if (path == '/timeout') {
         // Simulate slow response
         Future.delayed(Duration(seconds: 3), () {

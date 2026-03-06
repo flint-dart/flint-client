@@ -67,6 +67,7 @@ class FlintClient {
 
   /// Optional error handler callback.
   final ErrorHandler? onError;
+  final bool throwIfError;
 
   /// Optional interceptor called before each request is sent.
   final RequestInterceptor? requestInterceptor;
@@ -126,6 +127,7 @@ class FlintClient {
     this.defaultQueryParameters = const {},
     this.timeout = const Duration(seconds: 30),
     this.onError,
+    this.throwIfError = false,
     this.onDone,
     this.requestInterceptor,
     this.responseInterceptor,
@@ -206,6 +208,7 @@ class FlintClient {
     Map<String, dynamic>? defaultQueryParameters,
     Duration? timeout,
     ErrorHandler? onError,
+    bool? throwIfError,
     RequestInterceptor? requestInterceptor,
     ResponseInterceptor? responseInterceptor,
     ContextualRequestInterceptor? contextualRequestInterceptor,
@@ -231,6 +234,7 @@ class FlintClient {
           defaultQueryParameters ?? this.defaultQueryParameters,
       timeout: timeout ?? this.timeout,
       onError: onError ?? this.onError,
+      throwIfError: throwIfError ?? this.throwIfError,
       onDone: onDone ?? this.onDone,
       requestInterceptor: requestInterceptor ?? this.requestInterceptor,
       responseInterceptor: responseInterceptor ?? this.responseInterceptor,
@@ -704,6 +708,7 @@ class FlintClient {
 
     // CHANGED: Use provided retryConfig or default (which is no-retry)
     final effectiveRetryConfig = retryConfig ?? defaultRetryConfig;
+    final shouldThrowError = throwIfError;
     int attempt = 1;
     FlintResponse<T>? finalResponse;
     FlintError? finalError;
@@ -775,6 +780,9 @@ class FlintClient {
               finalResponse = errorResponse;
               finalError = budgetError;
               onDone?.call(errorResponse, budgetError);
+              if (shouldThrowError) {
+                throw budgetError;
+              }
               return errorResponse;
             }
 
@@ -836,6 +844,9 @@ class FlintClient {
               finalResponse = errorResponse;
               finalError = retryWaitError;
               onDone?.call(errorResponse, retryWaitError);
+              if (shouldThrowError) {
+                throw retryWaitError;
+              }
               return errorResponse;
             }
             attempt++;
@@ -860,6 +871,9 @@ class FlintClient {
           finalError = error;
           // Call onDone callback for error responses
           onDone?.call(errorResponse, error);
+          if (shouldThrowError) {
+            throw error;
+          }
           return errorResponse;
         }
       }

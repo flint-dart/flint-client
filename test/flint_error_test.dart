@@ -29,6 +29,7 @@ void main() {
         'Custom error',
         statusCode: 404,
         originalException: originalException,
+        data: {'from': 'backend'},
         url: url,
         method: method,
         timestamp: timestamp,
@@ -37,6 +38,7 @@ void main() {
       expect(error.message, 'Custom error');
       expect(error.statusCode, 404);
       expect(error.originalException, originalException);
+      expect(error.data, {'from': 'backend'});
       expect(error.url, url);
       expect(error.method, method);
       expect(error.timestamp, timestamp);
@@ -143,6 +145,9 @@ void main() {
       final original = FlintError(
         'Test error',
         statusCode: 404,
+        data: {
+          'errors': ['name is required'],
+        },
         url: Uri.parse('https://example.com/api'),
         method: 'GET',
         timestamp: DateTime(2023, 1, 1, 12, 0, 0),
@@ -153,6 +158,7 @@ void main() {
 
       expect(restored.message, original.message);
       expect(restored.statusCode, original.statusCode);
+      expect(restored.data, original.data);
       expect(restored.url, original.url);
       expect(restored.method, original.method);
       expect(restored.kind, original.kind);

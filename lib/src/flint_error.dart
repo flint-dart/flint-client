@@ -17,6 +17,10 @@ class FlintError implements Exception {
   /// The original exception that caused this error, if any.
   final dynamic originalException;
 
+  /// Raw payload returned by backend for this error.
+  /// Can be a map, list, string, or any JSON-decodable value.
+  final dynamic data;
+
   /// The URL that was being requested when the error occurred.
   final Uri? url;
 
@@ -35,6 +39,7 @@ class FlintError implements Exception {
     this.message, {
     this.statusCode,
     this.originalException,
+    this.data,
     this.url,
     this.method,
     FlintErrorKind? kind,
@@ -79,6 +84,7 @@ class FlintError implements Exception {
   factory FlintError.fromHttpResponse(
     HttpClientResponse response, {
     String? customMessage,
+    dynamic data,
     Uri? url,
     String? method,
   }) {
@@ -95,6 +101,7 @@ class FlintError implements Exception {
     return FlintError(
       customMessage ?? 'HTTP $statusCode$reasonPhrase',
       statusCode: statusCode,
+      data: data,
       url: url,
       method: method,
       kind: statusCode == 408 ? FlintErrorKind.timeout : FlintErrorKind.http,
@@ -164,6 +171,7 @@ class FlintError implements Exception {
     String? message,
     int? statusCode,
     dynamic originalException,
+    dynamic data,
     Uri? url,
     String? method,
     FlintErrorKind? kind,
@@ -174,6 +182,7 @@ class FlintError implements Exception {
       message ?? this.message,
       statusCode: statusCode ?? this.statusCode,
       originalException: originalException ?? this.originalException,
+      data: data ?? this.data,
       url: url ?? this.url,
       method: method ?? this.method,
       kind: kind ?? this.kind,
@@ -187,6 +196,7 @@ class FlintError implements Exception {
     return {
       'message': message,
       'statusCode': statusCode,
+      'data': data,
       'url': url?.toString(),
       'method': method,
       'kind': kind.name,
@@ -206,6 +216,7 @@ class FlintError implements Exception {
     return FlintError(
       map['message'] as String,
       statusCode: map['statusCode'] as int?,
+      data: map['data'],
       url: map['url'] != null ? Uri.parse(map['url'] as String) : null,
       method: map['method'] as String?,
       kind: _kindFromString(map['kind'] as String?),
