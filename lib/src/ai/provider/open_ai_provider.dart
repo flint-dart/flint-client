@@ -1,6 +1,8 @@
 import 'package:flint_client/src/ai/provider/ai_provider.dart';
-import 'package:flint_client/src/flint_client_base.dart';
-import 'package:flint_client/src/flint_response.dart';
+import 'package:flint_client/src/flint_client_base.dart'
+    if (dart.library.js_interop) 'package:flint_client/src/web/flint_client_web.dart';
+import 'package:flint_client/src/flint_response.dart'
+    if (dart.library.js_interop) 'package:flint_client/src/web/flint_client_web.dart';
 
 class OpenAIProvider extends AIProvider {
   OpenAIProvider({required String apiKey})

@@ -2,236 +2,196 @@
 
 [![Pub Version](https://img.shields.io/pub/v/flint_client)](https://pub.dev/packages/flint_client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Dart](https://img.shields.io/badge/Dart-2.17+-blue.svg)](https://dart.dev)
+[![Dart SDK](https://img.shields.io/badge/Dart-3.8%2B-blue.svg)](https://dart.dev)
 
-Official Dart client for the [Flint](https://flintdart.eulogia.net) framework.  
-Developed and maintained by **Eulogia**.
+Official Dart client for the [Flint](https://flintdart.eulogia.net) ecosystem.
 
-A powerful, feature-rich HTTP client for Dart and Flutter with built-in caching, retry mechanisms, interceptors, and customizable status code handling.
+`flint_client` gives you one package for:
 
----
+- HTTP requests with typed parsing
+- retry and cache support
+- file upload and download helpers
+- WebSocket communication
+- AI provider integrations for OpenAI, Gemini, and Hugging Face
 
-## 🚀 Features
+## Installation
 
-- **🔄 Smart Retry Logic**: Configurable retry with exponential backoff and jitter
-- **💾 Built-in Caching**: Memory cache with configurable TTL and freshness ratios
-- **🎯 Customizable Status Codes**: Define your own success/error/redirect status mappings
-- **📁 File Upload/Download**: Multipart form support with progress tracking
-- **🔧 Interceptors**: Request/response interceptors for authentication and logging
-- **⏱️ Progress Tracking**: Real-time upload/download progress callbacks
-- **🛡️ Type Safety**: Generic response types with custom JSON parsers
-- **🐛 Debug Logging**: Comprehensive debug output for development
-- **📦 Zero Dependencies**: Pure Dart implementation
+From pub.dev:
 
----
+```bash
+dart pub add flint_client
+```
 
-## 📦 Installation
+For Flutter:
 
-Add this to your `pubspec.yaml`:
+```bash
+flutter pub add flint_client
+```
+
+Or add it manually:
 
 ```yaml
 dependencies:
-  flint_client:
-    git:
-      url: https://github.com/flint-dart/flint-client.git
+  flint_client: ^0.0.3+337
 ```
 
-Then run:
-
-```bash
-dart pub get
-```
-
----
-
-## 🔧 Quick Start
-
-### Basic Usage
+## Quick Start
 
 ```dart
 import 'package:flint_client/flint_client.dart';
 
-void main() async {
+Future<void> main() async {
   final client = FlintClient(
-    baseUrl: "https://api.example.com",
-    debug: true, // Enable debug logging
+    baseUrl: 'https://api.example.com',
+    debug: true,
   );
 
-  final response = await client.get<User>("/users/1",
-    parser: (json) => User.fromJson(json),
-  );
+  final response = await client.get<Map<String, dynamic>>('/health');
 
   if (response.isSuccess) {
-    print("User: ${response.data}");
+    print(response.data);
   } else {
-    print("Error: ${response.error}");
+    print(response.error?.message);
   }
 
   client.dispose();
 }
 ```
 
-### Advanced Configuration
+## Core Features
+
+- Typed request and response handling
+- Configurable retry policies
+- In-memory caching with TTL controls
+- Request and response lifecycle hooks
+- Multipart uploads and file downloads
+- WebSocket helpers through `client.wc(...)`
+- AI providers with shared request flow and response helpers
+
+## AI Support
+
+The package exports built-in AI providers so you can talk to model APIs using the same Flint request stack.
+
+### Available Providers
+
+- `OpenAIProvider`
+- `GeminiProvider`
+- `HuggingFaceProvider`
+
+### AI Quick Start
 
 ```dart
-final client = FlintClient(
-  baseUrl: "https://api.example.com",
-  headers: {
-    'Authorization': 'Bearer your-token',
-    'Content-Type': 'application/json',
-  },
-  timeout: Duration(seconds: 30),
-  debug: true,
-  statusCodeConfig: StatusCodeConfig.custom(
-    successCodes: {200, 201, 204},
-    errorCodes: {400, 401, 403, 404, 422, 500},
-    redirectCodes: {301, 302},
-  ),
-  onError: (error) {
-    print('Request failed: ${error.message}');
-  },
-);
-```
+import 'package:flint_client/flint_client.dart';
 
----
+Future<void> main() async {
+  final gemini = GeminiProvider(apiKey: 'YOUR_GEMINI_KEY');
 
-## 📚 Usage Examples
+  gemini.addContextMemory(
+    'You are helping users understand the Flint Dart ecosystem.',
+  );
 
-### GET Request with Caching
+  final response = await gemini.request(
+    model: 'gemini-2.5-flash',
+    prompt: 'Summarize what Flint Client does in one paragraph.',
+  );
 
-```dart
-final response = await client.get<List<Product>>(
-  '/products',
-  cacheConfig: CacheConfig(
-    maxAge: Duration(minutes: 10),
-    forceRefresh: false,
-  ),
-  parser: (json) {
-    if (json is List) {
-      return json.map((item) => Product.fromJson(item)).toList();
-    }
-    return [];
-  },
-);
-```
-
-### POST Request with JSON Body
-
-```dart
-final response = await client.post<Product>(
-  '/products',
-  body: {
-    'title': 'New Product',
-    'price': 29.99,
-    'category': 'electronics',
-  },
-  parser: (json) => Product.fromJson(json),
-);
-```
-
-### File Upload with Progress
-
-```dart
-final response = await client.post<Map<String, dynamic>>(
-  '/upload',
-  files: {
-    'image': File('path/to/image.jpg'),
-  },
-  onSendProgress: (sent, total) {
-    final progress = (sent / total * 100).round();
-    print('Upload progress: $progress%');
-  },
-);
-```
-
-### Custom Status Code Handling
-
-```dart
-// For APIs that use non-standard status codes
-final customConfig = StatusCodeConfig.custom(
-  successCodes: {200, 201, 204, 304}, // Include 304 as success
-  errorCodes: {400, 401, 500}, // Only specific errors
-  redirectCodes: {302, 307},
-);
-
-final response = await client.get<User>(
-  '/user',
-  statusConfig: customConfig,
-);
-
-if (response.isSuccess) {
-  // Handle success according to your custom config
+  final parsed = GeminiResponse.fromJson(response.data);
+  print(parsed.text);
 }
 ```
 
-### Error Handling with onDone Callback
+### How To Use AI In flint_client
+
+1. Create a provider with your API key.
+2. Optionally add context with `addContextMemory(...)`.
+3. Call `request(...)` with a model name and prompt.
+4. Parse the raw response with the matching response helper.
+5. Reuse the same provider if you want conversation history preserved.
+
+### OpenAI Example
+
+```dart
+import 'package:flint_client/flint_client.dart';
+
+Future<void> main() async {
+  final openAI = OpenAIProvider(apiKey: 'YOUR_OPENAI_KEY');
+
+  final response = await openAI.request(
+    model: 'gpt-4o-mini',
+    prompt: 'Write a short welcome message for Flint users.',
+  );
+
+  final parsed = OpenAIResponse.fromJson(response.data);
+  print(parsed.text);
+}
+```
+
+### Gemini Example
+
+```dart
+import 'package:flint_client/flint_client.dart';
+
+Future<void> main() async {
+  final gemini = GeminiProvider(apiKey: 'YOUR_GEMINI_KEY');
+
+  final response = await gemini.request(
+    model: 'gemini-2.5-flash',
+    prompt: 'Explain caching in simple terms.',
+    includeHistory: true,
+    includeContext: true,
+    maxTokens: 300,
+  );
+
+  final parsed = GeminiResponse.fromJson(response.data);
+  print(parsed.text);
+}
+```
+
+### Hugging Face Example
+
+```dart
+import 'package:flint_client/flint_client.dart';
+
+Future<void> main() async {
+  final hf = HuggingFaceProvider(apiKey: 'YOUR_HF_KEY');
+
+  final response = await hf.request(
+    model: 'gpt2',
+    prompt: 'Generate a short API product tagline.',
+  );
+
+  final parsed = HuggingFaceResponse.fromJson(response.data);
+  print(parsed.generatedText);
+}
+```
+
+### AI Notes
+
+- `AIProvider` keeps in-memory history on the provider instance.
+- `resetHistory()` clears conversation history.
+- `clearContextMemory()` removes stored context snippets.
+- `includeHistory` and `includeContext` let you control what gets sent.
+- The raw provider response is still available through `response.data`.
+
+## HTTP Usage
+
+### GET With Parsing
 
 ```dart
 final response = await client.get<User>(
   '/users/1',
-  onDone: (response, error) {
-    if (error != null) {
-      print('Request completed with error: ${error.message}');
-    } else {
-      print('Request completed successfully: ${response.statusCode}');
-    }
-  },
+  parser: (json) => User.fromJson(json),
 );
 ```
 
----
-
-## 🔌 API Reference
-
-### HTTP Methods
-
-- `get<T>(path, {query, headers, cache, parser})`
-- `post<T>(path, {body, files, headers, parser})`
-- `put<T>(path, {body, files, headers, parser})`
-- `patch<T>(path, {body, files, headers, parser})`
-- `delete<T>(path, {headers, parser})`
-
-### Configuration Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `baseUrl` | `String` | Base URL for all requests |
-| `headers` | `Map<String, String>` | Default headers |
-| `timeout` | `Duration` | Request timeout duration |
-| `debug` | `bool` | Enable debug logging |
-| `statusCodeConfig` | `StatusCodeConfig` | Custom status code mappings |
-| `onError` | `ErrorHandler` | Global error callback |
-| `onDone` | `RequestDoneCallback` | Request completion callback |
-
-### Response Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `statusCode` | `int` | HTTP status code |
-| `data` | `T` | Response data (parsed) |
-| `isSuccess` | `bool` | Whether request succeeded |
-| `isError` | `bool` | Whether request failed |
-| `isRedirect` | `bool` | Whether response is redirect |
-| `error` | `FlintError` | Error object (if any) |
-| `headers` | `HttpHeaders` | Response headers |
-| `duration` | `Duration` | Request duration |
-
----
-
-## 🛠️ Advanced Features
-
-### Custom Interceptors
+### POST JSON
 
 ```dart
-final client = FlintClient(
-  baseUrl: 'https://api.example.com',
-  requestInterceptor: (request) async {
-    // Add auth token to all requests
-    request.headers.set('Authorization', 'Bearer $token');
-  },
-  responseInterceptor: (response) async {
-    // Log all responses
-    print('Response: ${response.statusCode}');
+final response = await client.post<Map<String, dynamic>>(
+  '/products',
+  body: {
+    'title': 'New Product',
+    'price': 29.99,
   },
 );
 ```
@@ -239,8 +199,8 @@ final client = FlintClient(
 ### Retry Configuration
 
 ```dart
-final response = await client.get<User>(
-  '/users/1',
+final response = await client.get<String>(
+  '/retry-test',
   retryConfig: RetryConfig(
     maxAttempts: 3,
     delay: Duration(seconds: 1),
@@ -250,101 +210,55 @@ final response = await client.get<User>(
 );
 ```
 
-### Cache Management
+### Cache Configuration
 
 ```dart
-// Clear entire cache
-await client.clearCache();
-
-// Remove specific cached item
-await client.removeCachedResponse('cache-key');
-
-// Get cache size
-final size = await client.cacheSize;
-```
-
----
-
-## 🎯 Status Code Configuration
-
-Handle non-standard APIs with custom status code mappings:
-
-```dart
-// For APIs that use 200 for errors
-final weirdApiConfig = StatusCodeConfig.custom(
-  successCodes: {200}, // Only 200 is success
-  errorCodes: {200, 400, 500}, // 200 can be error!
-  redirectCodes: {302},
+final response = await client.get<List<dynamic>>(
+  '/products',
+  cacheConfig: CacheConfig(
+    maxAge: Duration(minutes: 10),
+    forceRefresh: false,
+  ),
 );
-
-// Standard HTTP (default)
-final standardConfig = StatusCodeConfig();
-
-// Pre-defined configurations
-final only200 = StatusCodeConfig.only200;
-final broadSuccess = StatusCodeConfig.broadSuccess;
 ```
 
----
+### File Upload
 
-## 📖 Documentation
+```dart
+final response = await client.uploadFile<Map<String, dynamic>>(
+  '/upload',
+  fileField: 'image',
+  file: File('path/to/image.jpg'),
+);
+```
 
-- [Full API Documentation](https://flintdart.eulogia.net/docs/client)
-- [GitHub Repository](https://github.com/flint-dart/flint-client)
-- [Issue Tracker](https://github.com/flint-dart/flint-client/issues)
-- [Examples Folder](/examples) - Complete usage examples
+## WebSocket Usage
 
----
+```dart
+final ws = client.wc('/chat');
 
-## 🤝 Contributing
+ws.on('connected', (_) => print('connected'));
+ws.on('message', (data) => print(data));
+ws.emit('send_message', {'text': 'Hello'});
+```
 
-We love contributions! Here's how to help:
+## Links
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
+- Package page: https://pub.dev/packages/flint_client
+- AI docs in this README: https://github.com/flint-dart/flint-client#ai-support
+- Full docs: https://flintdart.eulogia.net/docs/client
+- Repository: https://github.com/flint-dart/flint-client
+- Examples: https://github.com/flint-dart/flint-client/tree/main/example
+- AI example file: https://github.com/flint-dart/flint-client/blob/main/example/lib/main.dart
+- Issue tracker: https://github.com/flint-dart/flint-client/issues
 
-### Development Setup
+## Development
 
 ```bash
-git clone https://github.com/flint-dart/flint-client.git
-cd flint-client
 dart pub get
 dart test
 ```
 
----
+## License
 
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🏗️ Built With
-
-- [Dart](https://dart.dev) - Programming language
-- [Flutter](https://flutter.dev) - UI framework (for Flutter apps)
-
----
-
-## 👥 Maintainers
-
-- [Eulogia](https://github.com/eulogia) - Core maintainer
-- [Eulogia Website](https://eulogia.net) - 
-
----
-
-## 🙏 Acknowledgments
-
-- Thanks to all our contributors and users
-
----
-
-**⭐ Star this repo if you find it helpful!**
-```
-
-
-
+This project is licensed under the MIT License. See [LICENSE](LICENSE).

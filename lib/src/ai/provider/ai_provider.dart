@@ -1,4 +1,6 @@
-import 'package:flint_client/flint_client.dart';
+import '../../flint_response.dart'
+    if (dart.library.js_interop) '../../web/flint_client_web.dart';
+import '../model/ai_model.dart';
 
 /// Base AI provider — stores conversation history and context memory
 abstract class AIProvider {
