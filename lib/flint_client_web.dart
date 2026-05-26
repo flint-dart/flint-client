@@ -1,6 +1,7 @@
 library;
 
 export 'src/web/flint_client_web.dart';
+export 'src/enum/websocket_connection_state.dart';
 export 'src/ai/model/ai_model.dart';
 export 'src/ai/provider/ai_provider.dart';
 export 'src/ai/provider/gemini_provider.dart';

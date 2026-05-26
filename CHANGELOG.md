@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.4 - 2026-05-26
+
+### Added
+- Added browser WebSocket support to the web `FlintClient` implementation.
+- Exported browser-safe `FlintWebSocketClient` APIs for Flint UI apps.
+
+### Fixed
+- Fixed hosted browser builds that call `client.ws(...)` from Flint UI pages.
+
 ## 0.0.3 - 2026-05-14
 
 ### Added
