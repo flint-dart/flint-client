@@ -146,6 +146,8 @@ class RequestExecutor {
   Future<HttpClientRequest> _createRequest(String method, Uri url) async {
     try {
       switch (method.toUpperCase()) {
+        case 'GET':
+          return await client.getUrl(url);
         case 'POST':
           return await client.postUrl(url);
         case 'PUT':
@@ -155,7 +157,7 @@ class RequestExecutor {
         case 'DELETE':
           return await client.deleteUrl(url);
         default:
-          return await client.getUrl(url);
+          return await client.openUrl(method.toUpperCase(), url);
       }
     } catch (e) {
       throw FlintError('Failed to create request: ${e.toString()}');

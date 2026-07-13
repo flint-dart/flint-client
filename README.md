@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Dart SDK](https://img.shields.io/badge/Dart-3.8%2B-blue.svg)](https://dart.dev)
 
-Official Dart client for the [Flint](https://flintdart.eulogia.net) ecosystem.
+Official Dart client for the [Flint](https://flintdart.dev) ecosystem.
 
 `flint_client` gives you one package for:
 
@@ -196,6 +196,33 @@ final response = await client.post<Map<String, dynamic>>(
 );
 ```
 
+### QUERY JSON
+
+HTTP `QUERY` is defined by RFC 10008. It is safe and idempotent like `GET`, but
+it can send request content like `POST`. Use it for complex search/filter
+requests that should not mutate server state.
+
+```dart
+final response = await client.query<Map<String, dynamic>>(
+  '/products/search',
+  queryParameters: {'page': 1},
+  body: {
+    'category': 'electronics',
+    'minimumPrice': 50000,
+    'inStock': true,
+  },
+);
+```
+
+`queryParameters` still become URI query string values. `body` is QUERY request
+content and uses the same JSON, text, form, timeout, interceptor, retry, cache,
+and parsing pipeline as the other request methods. QUERY is included in the
+default idempotent retry method set when retries are enabled.
+
+Compatibility note: some proxies, browsers, servers, API gateways, and API
+tools may not support `QUERY` yet. See RFC 10008:
+https://www.rfc-editor.org/rfc/rfc10008.html.
+
 ### Retry Configuration
 
 ```dart
@@ -246,7 +273,7 @@ ws.emit('send_message', {'text': 'Hello'});
 
 - Package page: https://pub.dev/packages/flint_client
 - AI docs in this README: https://github.com/flint-dart/flint-client#ai-support
-- Full docs: https://flintdart.eulogia.net/docs/client
+- Full docs: https://flintdart.dev/docs/client
 - Repository: https://github.com/flint-dart/flint-client
 - Examples: https://github.com/flint-dart/flint-client/tree/main/example
 - AI example file: https://github.com/flint-dart/flint-client/blob/main/example/lib/main.dart

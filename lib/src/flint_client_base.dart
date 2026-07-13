@@ -466,6 +466,51 @@ class FlintClient {
     );
   }
 
+  /// Sends a QUERY request to [path].
+  ///
+  /// QUERY is safe and idempotent like GET, while allowing request content for
+  /// complex query expressions.
+  Future<FlintResponse<T>> query<T>(
+    String path, {
+    dynamic body,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+    String? saveFilePath,
+    Map<String, File>? files,
+    ProgressCallback? onSendProgress,
+    StatusCodeConfig? statusConfig,
+    CacheConfig? cacheConfig,
+    RetryConfig? retryConfig,
+    JsonParser<T>? parser,
+    ErrorHandler? onError,
+    RequestDoneCallback<T>? onDone,
+    CancelToken? cancelToken,
+    Duration? requestTimeout,
+    ResponseParseMode? parseMode,
+  }) {
+    return request<T>(
+      'QUERY',
+      path,
+      options: RequestOptions<T>(
+        body: body,
+        queryParameters: queryParameters,
+        headers: headers,
+        saveFilePath: saveFilePath,
+        files: files,
+        onSendProgress: onSendProgress,
+        statusConfig: statusConfig,
+        cacheConfig: cacheConfig,
+        retryConfig: retryConfig,
+        parser: parser,
+        onError: onError,
+        onDone: onDone ?? this.onDone,
+        cancelToken: cancelToken,
+        timeout: requestTimeout,
+        parseMode: parseMode,
+      ),
+    );
+  }
+
   FlintClient withQuery(Map<String, dynamic> query) {
     return copyWith(
       defaultQueryParameters: {...defaultQueryParameters, ...query},
@@ -920,7 +965,7 @@ class FlintClient {
     final effectiveCacheConfig = cacheConfig ?? defaultCacheConfig;
     final shouldCache =
         effectiveCacheConfig.maxAge > Duration.zero &&
-        (method.toUpperCase() == 'GET' || cacheConfig != null);
+        (_isCacheableByDefault(method) || cacheConfig != null);
 
     String? cacheKey;
     if (shouldCache && !effectiveCacheConfig.forceRefresh) {
@@ -998,6 +1043,11 @@ class FlintClient {
     }
 
     return flintResponse;
+  }
+
+  bool _isCacheableByDefault(String method) {
+    final normalized = method.toUpperCase();
+    return normalized == 'GET' || normalized == 'QUERY';
   }
 
   /// Logs, handles, or throws errors internally and triggers the

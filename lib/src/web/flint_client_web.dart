@@ -370,6 +370,29 @@ class FlintClient {
     );
   }
 
+  Future<FlintResponse<T>> query<T>(
+    String path, {
+    dynamic body,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+    JsonParser<T>? parser,
+    ErrorHandler? onError,
+    RequestDoneCallback<T>? onDone,
+    Duration? requestTimeout,
+  }) {
+    return request<T>(
+      'QUERY',
+      path,
+      body: body,
+      queryParameters: queryParameters,
+      headers: headers,
+      parser: parser,
+      onError: onError,
+      onDone: onDone,
+      requestTimeout: requestTimeout,
+    );
+  }
+
   Future<FlintResponse<T>> delete<T>(
     String path, {
     Map<String, dynamic>? queryParameters,

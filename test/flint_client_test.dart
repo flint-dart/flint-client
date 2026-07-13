@@ -137,6 +137,32 @@ void main() {
         expect(response, isSuccessfulResponse(statusCode: 200));
         expect(response.data!['method'], 'DELETE');
       });
+
+      test('QUERY request sends literal method with JSON body', () async {
+        final response = await client.query<Map<String, dynamic>>(
+          '/echo',
+          body: {'category': 'electronics', 'inStock': true},
+        );
+
+        expect(response, isSuccessfulResponse(statusCode: 200));
+        expect(response.data!['method'], 'QUERY');
+        expect(response.data!['body'], containsPair('category', 'electronics'));
+        expect(response.data!['body'], containsPair('inStock', true));
+      });
+
+      test('generic request sends literal QUERY method', () async {
+        final response = await client.request<Map<String, dynamic>>(
+          'QUERY',
+          '/echo',
+          options: RequestOptions<Map<String, dynamic>>(
+            body: {'from': 'generic'},
+          ),
+        );
+
+        expect(response, isSuccessfulResponse(statusCode: 200));
+        expect(response.data!['method'], 'QUERY');
+        expect(response.data!['body'], containsPair('from', 'generic'));
+      });
     });
     group('Headers', () {
       test('includes default headers', () async {
@@ -188,6 +214,32 @@ void main() {
 
         clientWithHeaders.dispose();
       });
+
+      test('QUERY includes default and per-request headers', () async {
+        final clientWithHeaders = FlintClient(
+          baseUrl: server.baseUrl,
+          headers: {'Authorization': 'Bearer token'},
+        );
+
+        final response = await clientWithHeaders.query<Map<String, dynamic>>(
+          '/echo',
+          body: {'q': 'desk'},
+          headers: {'X-Request': 'query-value'},
+        );
+
+        expect(response, isSuccessfulResponse());
+        expect(response.data!['method'], 'QUERY');
+        expect(
+          response.data!['headers'],
+          containsPair('authorization', ['Bearer token']),
+        );
+        expect(
+          response.data!['headers'],
+          containsPair('x-request', ['query-value']),
+        );
+
+        clientWithHeaders.dispose();
+      });
     });
 
     group('Query Parameters', () {
@@ -219,6 +271,20 @@ void main() {
         expect(response, isSuccessfulResponse());
         expect(response.data!['query'], containsPair('apiKey', '123'));
         expect(response.data!['query'], containsPair('page', '2'));
+      });
+
+      test('QUERY combines query parameters with request body', () async {
+        final response = await client.query<Map<String, dynamic>>(
+          '/echo',
+          queryParameters: {'page': 2, 'sort': 'name'},
+          body: {'category': 'bags'},
+        );
+
+        expect(response, isSuccessfulResponse());
+        expect(response.data!['method'], 'QUERY');
+        expect(response.data!['query'], containsPair('page', '2'));
+        expect(response.data!['query'], containsPair('sort', 'name'));
+        expect(response.data!['body'], containsPair('category', 'bags'));
       });
     });
 
@@ -281,6 +347,32 @@ void main() {
         expect(response.data!['body'], contains('name=Flint+Client'));
         expect(response.data!['body'], contains('active=true'));
       });
+
+      test(
+        'QUERY sends text and form bodies through existing serializers',
+        () async {
+          final textResponse = await client.query<Map<String, dynamic>>(
+            '/echo',
+            body: 'status:open',
+            headers: {'Content-Type': 'text/plain'},
+          );
+
+          expect(textResponse, isSuccessfulResponse());
+          expect(textResponse.data!['method'], 'QUERY');
+          expect(textResponse.data!['body'], 'status:open');
+
+          final formResponse = await client.query<Map<String, dynamic>>(
+            '/echo',
+            body: {'name': 'Flint Query', 'active': 'true'},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          );
+
+          expect(formResponse, isSuccessfulResponse());
+          expect(formResponse.data!['method'], 'QUERY');
+          expect(formResponse.data!['body'], contains('name=Flint+Query'));
+          expect(formResponse.data!['body'], contains('active=true'));
+        },
+      );
 
       test('uses custom JSON parser', () async {
         final response = await client.get<String>(
@@ -709,6 +801,21 @@ void main() {
         expect(response.error?.isTimeout, isTrue);
         longTimeoutClient.dispose();
       });
+
+      test('QUERY supports request timeout handling', () async {
+        final clientWithShortTimeout = FlintClient(
+          baseUrl: server.baseUrl,
+          timeout: Duration(milliseconds: 100),
+        );
+
+        final response = await clientWithShortTimeout.query<String>('/timeout');
+
+        expect(response, isErrorResponse());
+        expect(response.error?.isTimeout, isTrue);
+        expect(response.error?.method, 'QUERY');
+
+        clientWithShortTimeout.dispose();
+      });
     });
 
     group('Retry Idempotency', () {
@@ -744,6 +851,24 @@ void main() {
 
         expect(response.isSuccess, isTrue);
         expect(response.data, contains('Success on attempt 3'));
+        retryClient.dispose();
+      });
+
+      test('retries QUERY by default when retries are configured', () async {
+        final retryClient = FlintClient(
+          baseUrl: server.baseUrl,
+          defaultRetryConfig: RetryConfig(
+            maxAttempts: 3,
+            delay: Duration(milliseconds: 10),
+          ),
+        );
+
+        await retryClient.get<String>('/retry-reset');
+        final response = await retryClient.query<String>('/retry-test');
+
+        expect(response.isSuccess, isTrue);
+        expect(response.data, contains('Success on attempt 3'));
+        expect(response.method, 'QUERY');
         retryClient.dispose();
       });
     });
@@ -954,6 +1079,48 @@ void main() {
         observedClient.dispose();
       });
 
+      test(
+        'QUERY cache keys include request body and query parameters',
+        () async {
+          int cacheHits = 0;
+          final observedClient = FlintClient(
+            baseUrl: server.baseUrl,
+            defaultCacheConfig: CacheConfig(maxAge: Duration(minutes: 1)),
+            lifecycleHooks: RequestLifecycleHooks(
+              onCacheHit: (context, cacheKey, _) {
+                cacheHits++;
+                expect(context.method, 'QUERY');
+                expect(cacheKey, isNotEmpty);
+              },
+            ),
+          );
+
+          await observedClient.query<Map<String, dynamic>>(
+            '/echo',
+            queryParameters: {'page': 1},
+            body: {'category': 'bags'},
+          );
+          final cachedResponse = await observedClient
+              .query<Map<String, dynamic>>(
+                '/echo',
+                queryParameters: {'page': 1},
+                body: {'category': 'bags'},
+              );
+          final differentBody = await observedClient
+              .query<Map<String, dynamic>>(
+                '/echo',
+                queryParameters: {'page': 1},
+                body: {'category': 'desk'},
+              );
+
+          expect(cachedResponse.isSuccess, isTrue);
+          expect(differentBody.isSuccess, isTrue);
+          expect(cacheHits, 1);
+          expect(differentBody.data!['body'], containsPair('category', 'desk'));
+          observedClient.dispose();
+        },
+      );
+
       test('passes RequestContext through contextual interceptors', () async {
         String? requestCorrelation;
         String? responseCorrelation;
@@ -991,6 +1158,39 @@ void main() {
         );
         observedClient.dispose();
       });
+
+      test(
+        'QUERY passes RequestContext through contextual interceptors',
+        () async {
+          String? requestMethod;
+          String? responseMethod;
+
+          final observedClient = FlintClient(
+            baseUrl: server.baseUrl,
+            contextualRequestInterceptor: (request, context) async {
+              requestMethod = context.method;
+              request.headers.set('X-Query-Context', 'yes');
+            },
+            contextualResponseInterceptor: (response, context) async {
+              responseMethod = context.method;
+            },
+          );
+
+          final response = await observedClient.query<Map<String, dynamic>>(
+            '/echo',
+            body: {'q': 'reports'},
+          );
+
+          expect(response.isSuccess, isTrue);
+          expect(requestMethod, 'QUERY');
+          expect(responseMethod, 'QUERY');
+          expect(
+            response.data!['headers'],
+            containsPair('x-query-context', ['yes']),
+          );
+          observedClient.dispose();
+        },
+      );
 
       test('fires onError hook with retry intent', () async {
         final events = <bool>[];

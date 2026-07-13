@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.5 - 2026-07-13
+
+### Added
+- Added HTTP `QUERY` support with request bodies, query parameters, interceptors, timeout handling, response parsing, caching, and retry behavior.
+- Added tests and documentation for RFC 10008 QUERY requests.
+
 ## 0.0.4 - 2026-05-26
 
 ### Added

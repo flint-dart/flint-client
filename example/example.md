@@ -715,7 +715,7 @@ final client = FlintClient(
 ## 📞 Support
 
 For more help, check out:
-- [Full Documentation](https://flintdart.eulogia.net)
+- [Full Documentation](https://flintdart.dev)
 - [GitHub Repository](https://github.com/flint-dart/flint-client)
 - [Issue Tracker](https://github.com/flint-dart/flint-client/issues)
 

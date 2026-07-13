@@ -13,6 +13,7 @@ class RetryConfig {
     'HEAD',
     'PUT',
     'DELETE',
+    'QUERY',
     'OPTIONS',
     'TRACE',
   };

@@ -22,6 +22,7 @@ void main() {
         containsAll([SocketException, TimeoutException, HttpException]),
       );
       expect(config.retryMethods, equals(RetryConfig.defaultRetryMethods));
+      expect(config.retryMethods, contains('QUERY'));
       expect(config.retryEvaluator, isNull);
       expect(config.honorRetryAfter, isTrue);
       expect(config.maxRetryTime, isNull);
