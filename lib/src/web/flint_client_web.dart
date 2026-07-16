@@ -552,6 +552,7 @@ class FlintClient {
     final encodedBody = _body(body, requestHeaders);
 
     xhr.open(method, url, true);
+    xhr.withCredentials = true;
     for (final header in requestHeaders.entries) {
       xhr.setRequestHeader(header.key, header.value);
     }
