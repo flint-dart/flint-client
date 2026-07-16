@@ -92,6 +92,11 @@ class FlintClient {
   /// Enables debug logging if true.
   final bool debug;
 
+  /// Browser-only option for sending cookies and auth credentials with XHR.
+  ///
+  /// This is accepted by the IO client for API compatibility and ignored there.
+  final bool withCredentials;
+
   /// Internal, long-lived [HttpClient] instance.
   final HttpClient _client;
 
@@ -144,6 +149,7 @@ class FlintClient {
     this.defaultParseMode = ResponseParseMode.lenient,
     Set<String>? redactedHeaders,
     this.debug = false,
+    this.withCredentials = false,
     this.statusCodeConfig = const StatusCodeConfig(),
   }) : cacheStore = cacheStore ?? MemoryCacheStore(),
        defaultCacheConfig = defaultCacheConfig ?? const CacheConfig(),
@@ -224,6 +230,7 @@ class FlintClient {
     ResponseParseMode? defaultParseMode,
     Set<String>? redactedHeaders,
     bool? debug,
+    bool? withCredentials,
     StatusCodeConfig? statusCodeConfig,
     RequestLifecycleHooks? lifecycleHooks,
   }) {
@@ -252,6 +259,7 @@ class FlintClient {
       defaultParseMode: defaultParseMode ?? this.defaultParseMode,
       redactedHeaders: redactedHeaders ?? this.redactedHeaders,
       debug: debug ?? this.debug,
+      withCredentials: withCredentials ?? this.withCredentials,
       statusCodeConfig: statusCodeConfig ?? this.statusCodeConfig,
       lifecycleHooks: lifecycleHooks ?? this.lifecycleHooks,
     );

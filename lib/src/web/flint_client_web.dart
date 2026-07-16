@@ -267,6 +267,7 @@ class FlintClient {
     this.onDone,
     this.debug = false,
     this.statusCodeConfig = const StatusCodeConfig(),
+    this.withCredentials = false,
   });
 
   final String? baseUrl;
@@ -278,6 +279,7 @@ class FlintClient {
   final RequestDoneCallback? onDone;
   final bool debug;
   final StatusCodeConfig statusCodeConfig;
+  final bool withCredentials;
 
   Future<FlintResponse<T>> get<T>(
     String path, {
@@ -472,6 +474,7 @@ class FlintClient {
       onDone: onDone,
       debug: debug,
       statusCodeConfig: statusCodeConfig,
+      withCredentials: withCredentials,
     );
   }
 
@@ -552,7 +555,7 @@ class FlintClient {
     final encodedBody = _body(body, requestHeaders);
 
     xhr.open(method, url, true);
-    xhr.withCredentials = true;
+    xhr.withCredentials = withCredentials;
     for (final header in requestHeaders.entries) {
       xhr.setRequestHeader(header.key, header.value);
     }
