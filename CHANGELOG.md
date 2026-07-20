@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.6 - 2026-07-20
+
+### Added
+- Added browser credential request support through `withCredentials` for Flint UI authenticated requests.
+- Added `copyWith(withCredentials: ...)` support so client instances can preserve or override credential behavior.
+
 ## 0.0.5 - 2026-07-13
 
 ### Added
