@@ -26,3 +26,5 @@ export 'src/ai/response/gemini_response.dart';
 export 'src/ai/response/hugging_face_response.dart';
 export 'src/ai/response/open_ai_response.dart';
 export 'src/status_code_config.dart';
+export 'src/database/protocol/flint_db_protocol.dart';
+export 'src/database/flint_database_client_io.dart';
