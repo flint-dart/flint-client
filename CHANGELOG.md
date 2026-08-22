@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - 2026-08-22
+
+### Fixed
+- Fixed unawaited Future returns inside `try/catch` blocks in `request_executor.dart` and `extention.dart` for 100% clean Pana static analysis.
+- Hardened analysis options with strict lint rules.
+
 ## 0.1.0 - 2026-08-22
 
 ### Added

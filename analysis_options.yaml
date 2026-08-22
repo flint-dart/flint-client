@@ -10,6 +10,7 @@ include: package:lints/recommended.yaml
 
 linter:
   rules:
-    # Uncomment and customize rules as needed
-    # avoid_print: false        # Disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Enforce single quotes
+    unawaited_futures: true
+    cancel_subscriptions: true
+    close_sinks: true
+

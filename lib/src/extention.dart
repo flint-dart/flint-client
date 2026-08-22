@@ -91,16 +91,16 @@ extension FlintClientFileSaver on FlintClient {
       await file.parent.create(recursive: true);
 
       if (data is File) {
-        return data.copy(file.path);
+        return await data.copy(file.path);
       }
       if (data is List<int>) {
-        return file.writeAsBytes(data, flush: true);
+        return await file.writeAsBytes(data, flush: true);
       }
       if (data is String) {
-        return file.writeAsString(data, flush: true);
+        return await file.writeAsString(data, flush: true);
       }
       if (data is Map || data is List) {
-        return file.writeAsString(jsonEncode(data), flush: true);
+        return await file.writeAsString(jsonEncode(data), flush: true);
       }
       throw FlintError(
         'Response data is not supported for file saving: ${data.runtimeType}',

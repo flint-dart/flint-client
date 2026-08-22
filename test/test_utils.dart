@@ -44,65 +44,58 @@ class TestServer {
 
       // Simulate different response scenarios based on path
       if (path == '/success') {
-        response
-          ..statusCode = 200
-          ..write(jsonEncode({'message': 'Success', 'data': 'test'}))
-          ..close();
+        response.statusCode = 200;
+        response.write(jsonEncode({'message': 'Success', 'data': 'test'}));
+        await response.close();
       } else if (path == '/error/400') {
-        response
-          ..statusCode = 400
-          ..write('Bad Request')
-          ..close();
+        response.statusCode = 400;
+        response.write('Bad Request');
+        await response.close();
       } else if (path == '/error/500') {
-        response
-          ..statusCode = 500
-          ..write('Internal Server Error')
-          ..close();
+        response.statusCode = 500;
+        response.write('Internal Server Error');
+        await response.close();
       } else if (path == '/error/json') {
-        response
-          ..headers.contentType = ContentType.json
-          ..statusCode = 422
-          ..write(
-            jsonEncode({
-              'message': 'Validation failed',
-              'errors': {
-                'email': ['Invalid email'],
-              },
-            }),
-          )
-          ..close();
+        response.headers.contentType = ContentType.json;
+        response.statusCode = 422;
+        response.write(
+          jsonEncode({
+            'message': 'Validation failed',
+            'errors': {
+              'email': ['Invalid email'],
+            },
+          }),
+        );
+        await response.close();
       } else if (path == '/error/list') {
-        response
-          ..headers.contentType = ContentType.json
-          ..statusCode = 409
-          ..write(jsonEncode(['duplicate', 'conflict']))
-          ..close();
+        response.headers.contentType = ContentType.json;
+        response.statusCode = 409;
+        response.write(jsonEncode(['duplicate', 'conflict']));
+        await response.close();
       } else if (path == '/timeout') {
         // Simulate slow response
-        Future.delayed(Duration(seconds: 3), () {
-          response
-            ..statusCode = 200
-            ..write('Slow Response')
-            ..close();
-        });
+        unawaited(
+          Future.delayed(const Duration(seconds: 3), () async {
+            response.statusCode = 200;
+            response.write('Slow Response');
+            await response.close();
+          }),
+        );
       } else if (path == '/json') {
-        response
-          ..headers.contentType = ContentType.json
-          ..statusCode = 200
-          ..write(jsonEncode({'id': 1, 'name': 'Test'}))
-          ..close();
+        response.headers.contentType = ContentType.json;
+        response.statusCode = 200;
+        response.write(jsonEncode({'id': 1, 'name': 'Test'}));
+        await response.close();
       } else if (path == '/text') {
-        response
-          ..headers.contentType = ContentType.text
-          ..statusCode = 200
-          ..write('Plain text response')
-          ..close();
+        response.headers.contentType = ContentType.text;
+        response.statusCode = 200;
+        response.write('Plain text response');
+        await response.close();
       } else if (path == '/xml') {
-        response
-          ..headers.contentType = ContentType('application', 'xml')
-          ..statusCode = 200
-          ..write('<note><id>1</id><name>Flint</name></note>')
-          ..close();
+        response.headers.contentType = ContentType('application', 'xml');
+        response.statusCode = 200;
+        response.write('<note><id>1</id><name>Flint</name></note>');
+        await response.close();
       } else if (path == '/echo') {
         final headers = <String, List<String>>{};
         request.headers.forEach((name, values) {
@@ -136,65 +129,55 @@ class TestServer {
           'body': parsedBody,
         };
 
-        response
-          ..statusCode = 200
-          ..write(jsonEncode(body))
-          ..close();
+        response.statusCode = 200;
+        response.write(jsonEncode(body));
+        await response.close();
       } else if (path == '/download') {
-        response
-          ..headers.contentType = ContentType.binary
-          ..statusCode = 200
-          ..write('File content for download')
-          ..close();
+        response.headers.contentType = ContentType.binary;
+        response.statusCode = 200;
+        response.write('File content for download');
+        await response.close();
       } else if (path == '/retry-test') {
         _retryAttempts++;
         if (_retryAttempts <= 2) {
-          response
-            ..statusCode = 500
-            ..write('Attempt $_retryAttempts failed')
-            ..close();
+          response.statusCode = 500;
+          response.write('Attempt $_retryAttempts failed');
+          await response.close();
         } else {
-          response
-            ..statusCode = 200
-            ..write('Success on attempt $_retryAttempts')
-            ..close();
+          response.statusCode = 200;
+          response.write('Success on attempt $_retryAttempts');
+          await response.close();
         }
       } else if (path == '/retry-reset') {
         _retryAttempts = 0;
         _retryAfterAttempts = 0;
-        response
-          ..statusCode = 200
-          ..write('Retry counter reset')
-          ..close();
+        response.statusCode = 200;
+        response.write('Retry counter reset');
+        await response.close();
       } else if (path == '/retry-after-test') {
         _retryAfterAttempts++;
         if (_retryAfterAttempts == 1) {
           response.headers.set('Retry-After', '1');
-          response
-            ..statusCode = 429
-            ..write('Rate limited');
+          response.statusCode = 429;
+          response.write('Rate limited');
         } else {
-          response
-            ..statusCode = 200
-            ..write('Retry-After respected');
+          response.statusCode = 200;
+          response.write('Retry-After respected');
         }
-        response.close();
+        await response.close();
       } else if (path == '/always-500') {
-        response
-          ..statusCode = 500
-          ..write('Always failing endpoint')
-          ..close();
+        response.statusCode = 500;
+        response.write('Always failing endpoint');
+        await response.close();
       } else {
-        response
-          ..statusCode = 404
-          ..write('Not Found: $path')
-          ..close();
+        response.statusCode = 404;
+        response.write('Not Found: $path');
+        await response.close();
       }
     } catch (e) {
-      request.response
-        ..statusCode = 500
-        ..write('Server Error: $e')
-        ..close();
+      request.response.statusCode = 500;
+      request.response.write('Server Error: $e');
+      await request.response.close();
     }
   }
 }

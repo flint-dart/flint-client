@@ -1,6 +1,6 @@
 name: flint_client
 description: A powerful, type-safe Dart client with HTTP, WebSocket, caching, retry, database queries, and AI provider support.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/flint-dart/flint-client
 homepage: https://flintdart.dev
 documentation: https://github.com/flint-dart/flint-client#ai-support

@@ -100,7 +100,7 @@ void main() async {
     print('\n=== Cache Key Variations ===');
 
     // Same endpoint, different query parameters = different cache keys
-    client.get<List<dynamic>>(
+    await client.get<List<dynamic>>(
       '/posts?page=1&limit=10',
       cacheConfig: CacheConfig(maxAge: Duration(minutes: 5)),
     );

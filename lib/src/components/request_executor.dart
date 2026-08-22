@@ -124,7 +124,7 @@ class RequestExecutor {
       }
 
       logger.log('Response: ${response.statusCode} ${response.reasonPhrase}');
-      return responseHandler.handleResponse<T>(
+      return await responseHandler.handleResponse<T>(
         response,
         saveFilePath,
         parser,
@@ -310,20 +310,22 @@ class RequestExecutor {
       }
     });
 
-    task
-        .then(
-          (value) {
-            if (!completer.isCompleted) {
-              completer.complete(value);
-            }
-          },
-          onError: (Object error, StackTrace stackTrace) {
-            if (!completer.isCompleted) {
-              completer.completeError(error, stackTrace);
-            }
-          },
-        )
-        .whenComplete(() => sub.cancel());
+    unawaited(
+      task
+          .then(
+            (value) {
+              if (!completer.isCompleted) {
+                completer.complete(value);
+              }
+            },
+            onError: (Object error, StackTrace stackTrace) {
+              if (!completer.isCompleted) {
+                completer.completeError(error, stackTrace);
+              }
+            },
+          )
+          .whenComplete(() => unawaited(sub.cancel())),
+    );
 
     return completer.future;
   }

@@ -33,7 +33,7 @@ void main() {
             capturedHeaders.complete(headers);
           }
           final socket = await WebSocketTransformer.upgrade(request);
-          socket.close();
+          await socket.close();
         });
 
         final baseClient = FlintClient(
@@ -64,7 +64,7 @@ void main() {
           );
         }
         final socket = await WebSocketTransformer.upgrade(request);
-        socket.close();
+        await socket.close();
       });
 
       final wsClient = FlintWebSocketClient(

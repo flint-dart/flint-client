@@ -87,10 +87,9 @@ Future<HttpServer> _startMockWsServer() async {
 
   server.listen((request) async {
     if (request.uri.path != '/ws') {
-      request.response
-        ..statusCode = 404
-        ..write('Not found')
-        ..close();
+      request.response.statusCode = 404;
+      request.response.write('Not found');
+      await request.response.close();
       return;
     }
 
@@ -98,6 +97,7 @@ Future<HttpServer> _startMockWsServer() async {
     final tokenFromQuery = request.uri.queryParameters['token'];
     final exampleType = request.uri.queryParameters['example'] ?? 'unknown';
 
+    // ignore: close_sinks
     final socket = await WebSocketTransformer.upgrade(request);
     socket.add(
       jsonEncode({
