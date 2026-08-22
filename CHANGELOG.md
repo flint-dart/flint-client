@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0 - 2026-08-22
+
+### Added
+- Embedded database wire protocol models (`FlintDbQuery`, `FlintDbResult`, `FlintDbSchema`, `FlintDbError`) directly into `flint_client`.
+- Added typed database client endpoints for Flutter mobile (iOS/Android), desktop, and web apps.
+- Made `flint_client` 100% standalone and pub.dev ready without any external local path dependencies.
+
 ## 0.0.6 - 2026-07-20
 
 ### Added
